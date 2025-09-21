@@ -1,23 +1,17 @@
 
 import './App.css'
-import { Editor } from './Editor'
-import type { BlockType } from './types/types'
+import { Toolbar } from './components/Toolbar'
+import WhiteboardEditor from './WhiteboardEditor'
 
 function App() {
 
-  const block: BlockType = {
-    id: "1",
-    value: "",
-    position: 1,
-    createdAt: new Date(),
-  }
-
   return (
     <>
-      <main className='font-roboto'>
+      <main className='min-h-screen h-screen font-roboto bg-stone-100'>
 
-        <Editor initialBlocks={[block]} currentUser="1" />
+        <Toolbar />
 
+        <WhiteboardEditor />
       </main>
     </>
   )

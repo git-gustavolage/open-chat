@@ -1,36 +1,35 @@
-import React, { useCallback } from "react";
-import type { BlockType } from "../types/types";
+import { useCallback, type SetStateAction } from "react";
+import type { Actions, BlockType, CursorType } from "../types";
 
-export const useEnterAction = (
-    setBlocks: React.Dispatch<React.SetStateAction<BlockType[]>>,
-    setCursor: React.Dispatch<React.SetStateAction<{ blockId: string; index: number }>>
-) => {
-    return useCallback(
-        (id: string, cursorIndex: number, currentValue: string) => {
-            setBlocks((prev) => {
-                const idx = prev.findIndex((b) => b.id === id);
-                if (idx === -1) return prev;
-                const before = currentValue.slice(0, cursorIndex);
-                const after = currentValue.slice(cursorIndex);
+const useOnEnterAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: (action: Actions, target: BlockType, blocks: BlockType[]) => void) => {
 
-                const curr = prev[idx];
-                const newBlockId = Math.random().toString(36).slice(2);
-                const newBlock: BlockType = {
-                    id: newBlockId,
-                    value: after,
-                    position: idx + 1,
-                    createdAt: new Date(),
-                };
+    return useCallback((blocks: BlockType[], id: number, pos: number) => {
+        blocks = [...blocks];
+        const index = blocks.findIndex(block => block.id === id);
+        const currentBlock = blocks[index];
 
-                const updated = [...prev];
-                updated[idx] = { ...curr, value: before };
-                updated.splice(idx + 1, 0, newBlock);
+        const prevText = currentBlock.text.slice(0, pos);
+        const afterText = currentBlock.text.slice(pos);
 
-                const newBlocks = updated.map((b, i) => ({ ...b, position: i }));
-                setCursor({ blockId: newBlockId, index: 0 });
-                return newBlocks;
-            });
-        },
-        [setBlocks, setCursor]
-    );
-};
+        currentBlock.text = prevText;
+
+        const newBlock: BlockType = {
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            text: afterText,
+        }
+
+        blocks[index] = currentBlock;
+        blocks.splice(index + 1, 0, newBlock);
+
+        scheduleUpdate("enter", currentBlock, [newBlock])
+
+        setBlocks(blocks);
+
+        setCursor({
+            blockId: newBlock.id,
+            position: 0
+        });
+
+    }, [setBlocks, setCursor, scheduleUpdate]);
+}
+export { useOnEnterAction }

@@ -1,29 +1,28 @@
-// actions/deleteAction.ts
-import React, { useCallback } from "react";
-import type { BlockType } from "../types/types";
+import { useCallback, type SetStateAction } from "react";
+import type { Block, Cursor } from "../types";
 
-export const useDeleteAtEndAction = (
-    setBlocks: React.Dispatch<React.SetStateAction<BlockType[]>>,
-    setCursor: React.Dispatch<React.SetStateAction<{ blockId: string; index: number }>>
-) => {
-    return useCallback(
-        (id: string, cursorIndex: number, currentValue: string) => {
-            setBlocks((prev) => {
-                const idx = prev.findIndex((b) => b.id === id);
-                if (idx >= prev.length - 1) return prev;
-                const nextBlock = prev[idx + 1];
-                const mergedValue = currentValue + nextBlock.value;
+const useOnDeleteAction = (setBlocks: React.Dispatch<SetStateAction<Block[]>>, setCursor: React.Dispatch<SetStateAction<Cursor>>) => {
 
-                const curr = prev[idx];
-                const updated = [...prev];
-                updated[idx] = { ...curr, value: mergedValue };
-                updated.splice(idx + 1, 1);
+    return useCallback((blocks: Block[], index: number, pos: number) => {
+        const newBlocks = [...blocks];
+        const currentText = newBlocks[index].text;
 
-                const newBlocks = updated.map((b, i) => ({ ...b, position: i }));
-                setCursor({ blockId: id, index: cursorIndex });
-                return newBlocks;
-            });
-        },
-        [setBlocks, setCursor]
-    );
-};
+        const newIndex = index;
+        const newCursorPos = pos;
+
+        const nextText = newBlocks[index + 1].text;
+
+        newBlocks[index].text = currentText + nextText;
+        newBlocks.splice(index + 1, 1);
+
+        setBlocks(newBlocks);
+        setCursor({
+            blockId: newIndex,
+            position: newCursorPos,
+        })
+
+        return { newIndex, newCursorPos }
+    }, [setBlocks, setCursor])
+}
+
+export { useOnDeleteAction }

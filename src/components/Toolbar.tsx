@@ -1,7 +1,7 @@
 import React from "react";
 
 type ToolbarProps = {
-    onOpenUpdates: () => void;
+    onOpenUpdates?: () => void;
 };
 
 export const Toolbar: React.FC<ToolbarProps> = ({ onOpenUpdates }) => {

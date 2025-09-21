@@ -1,25 +1,17 @@
-// actions/arrowUpAction.ts
-import React, { useCallback } from "react";
-import type { BlockType } from "../types/types";
+import { useCallback, type SetStateAction } from "react";
+import type { Cursor } from "../types";
 
-const findBlockIndex = (blocks: BlockType[], id: string): number =>
-    blocks.findIndex((b) => b.id === id);
+export const useOnArrowUpAction = (setCursor: React.Dispatch<SetStateAction<Cursor>>) => {
 
-export const useArrowUpAction = (
-    blocks: BlockType[],
-    setCursor: React.Dispatch<React.SetStateAction<{ blockId: string; index: number }>>
-) => {
-    return useCallback(
-        (id: string, cursorIndex: number) => {
-            const idx = findBlockIndex(blocks, id);
-            if (idx > 0) {
-                const prevBlock = blocks[idx - 1];
-                setCursor({
-                    blockId: prevBlock.id,
-                    index: Math.min(prevBlock.value.length, cursorIndex),
-                });
-            }
-        },
-        [blocks, setCursor]
-    );
-};
+    return useCallback((input: HTMLInputElement | null, index: number, pos: number) => {
+        if (input) {
+            const newPos = Math.min(pos, input.value.length);
+            setCursor({
+                blockId: index - 1,
+                position: newPos,
+            })
+            input.focus();
+            input.setSelectionRange(newPos, newPos);
+        }
+    }, [setCursor])
+}
