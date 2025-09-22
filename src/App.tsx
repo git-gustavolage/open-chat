@@ -7,10 +7,8 @@ function App() {
 
   return (
     <>
-      <main className='min-h-screen h-screen font-roboto bg-stone-100'>
-
+      <main className='min-h-screen h-screen font-roboto bg-neutral-100'>
         <Toolbar />
-
         <WhiteboardEditor />
       </main>
     </>
