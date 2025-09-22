@@ -11,12 +11,13 @@ import { useOnArrowRightAction } from "./actions/arrowRightAction";
 import Block from "./Block";
 import useSchedule from "./hooks/useSchedule";
 import Debug from "./components/Debug";
+import { v4 as uuidv4 } from 'uuid';
 
 export default function WhiteboardEditor() {
     const [blocks, setBlocks] = useState<BlockType[]>([]);
     const [cursor, setCursor] = useState<CursorType>({ blockId: 0, position: 0 });
     const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
-    const userIdRef = useRef(crypto.randomUUID());
+    const userIdRef = useRef(uuidv4());
 
     const debugRef = useRef(false);
 
