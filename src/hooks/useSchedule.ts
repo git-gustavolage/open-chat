@@ -78,7 +78,7 @@ export default function useSchedule(roomId: string, userId: string, setBlocks: R
     }
 
     useEffect(() => {
-        const socket = io("http://localhost:3001", { query: { roomId, userId } });
+        const socket = io("http://localhost:9001", { query: { roomId, userId } });
 
         socketRef.current = socket;
 
