@@ -1,7 +1,7 @@
 import { useCallback, type SetStateAction } from "react";
-import type { Actions, BlockType, CursorType } from "../types";
+import type { BlockType, CursorType, ScheduleUpdate } from "../types";
 
-const useOnEnterAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: (action: Actions, target: BlockType, blocks: BlockType[]) => void) => {
+const useOnEnterAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: ScheduleUpdate) => {
 
     return useCallback((blocks: BlockType[], id: number, pos: number) => {
         blocks = [...blocks];
@@ -21,14 +21,15 @@ const useOnEnterAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>
         blocks[index] = currentBlock;
         blocks.splice(index + 1, 0, newBlock);
 
-        scheduleUpdate("enter", currentBlock, [newBlock])
-
-        setBlocks(blocks);
-
-        setCursor({
+        const newCursor = {
             blockId: newBlock.id,
             position: 0
-        });
+        };
+
+        scheduleUpdate("enter", newCursor, currentBlock, [newBlock])
+
+        setBlocks(blocks);
+        setCursor(newCursor);
 
     }, [setBlocks, setCursor, scheduleUpdate]);
 }

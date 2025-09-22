@@ -1,17 +1,29 @@
 import { useCallback, type SetStateAction } from "react";
-import type { Cursor } from "../types";
+import type { BlockType, CursorType, ScheduleUpdate } from "../types";
 
-export const useOnArrowDownAction = (setCursor: React.Dispatch<SetStateAction<Cursor>>) => {
+export const useOnArrowDownAction = (setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: ScheduleUpdate) => {
 
-    return useCallback((input: HTMLInputElement | null, index: number, pos: number) => {
-        if (input) {
-            const newPos = Math.min(pos, input.value.length);
-            setCursor({
-                blockId: index + 1,
-                position: newPos,
-            })
-            input.focus();
-            input.setSelectionRange(newPos, newPos);
+    return useCallback((blocks: BlockType[], id: number, pos: number) => {
+        blocks = [...blocks];
+        const index = blocks.findIndex(block => block.id === id);
+
+        const nextBlock = blocks[index + 1];
+
+        if (!nextBlock) {
+            return { newCursorPos: pos };
         }
-    }, [setCursor])
+
+        const newCursorPos = Math.min(pos, nextBlock.text.length);
+
+        const newCursor = {
+            blockId: nextBlock.id,
+            position: newCursorPos,
+        };
+
+        scheduleUpdate("arrowDown", newCursor);
+
+        setCursor(newCursor);
+
+        return { newCursorPos };
+    }, [setCursor, scheduleUpdate])
 }

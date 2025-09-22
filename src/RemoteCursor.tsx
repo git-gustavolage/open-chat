@@ -12,33 +12,37 @@ export const RemoteCursor: React.FC<Props> = ({ cursor, inputRef }) => {
     const [selectionLeft, setSelectionLeft] = useState(0);
     const [selectionWidth, setSelectionWidth] = useState(0);
 
-    useEffect(() => {
-        if (!inputRef) return;
+    console.log(cursor);
+    
 
-        const style = window.getComputedStyle(inputRef);
+    useEffect(() => {
+        if (!inputRef.current) return;
+        const input = inputRef.current;
+
+        const style = window.getComputedStyle(input);
         const font = style.font;
 
         const caretPos = cursor.selectionEnd !== undefined ? cursor.selectionEnd : cursor.position;
 
-        const valueBeforeCaret = inputRef.value.slice(0, caretPos);
+        const valueBeforeCaret = input.value.slice(0, caretPos);
         const spanCaret = document.createElement("span");
         spanCaret.style.visibility = "hidden";
         spanCaret.style.position = "absolute";
         spanCaret.style.whiteSpace = "pre";
         spanCaret.style.font = font;
         spanCaret.innerText = valueBeforeCaret;
-        inputRef.parentElement?.appendChild(spanCaret);
+        input.parentElement?.appendChild(spanCaret);
         const newLeft = spanCaret.getBoundingClientRect().width;
         spanCaret.remove();
         setLeft(newLeft);
-        setHeight(inputRef.offsetHeight);
+        setHeight(input.offsetHeight);
 
         if (cursor.selectionEnd !== undefined && cursor.selectionEnd !== cursor.position) {
             const start = Math.min(cursor.position, cursor.selectionEnd);
             const end = Math.max(cursor.position, cursor.selectionEnd);
 
-            const valueBeforeStart = inputRef.value.slice(0, start);
-            const valueBeforeEnd = inputRef.value.slice(0, end);
+            const valueBeforeStart = input.value.slice(0, start);
+            const valueBeforeEnd = input.value.slice(0, end);
 
             const spanStart = document.createElement("span");
             spanStart.style.visibility = "hidden";
@@ -46,7 +50,7 @@ export const RemoteCursor: React.FC<Props> = ({ cursor, inputRef }) => {
             spanStart.style.whiteSpace = "pre";
             spanStart.style.font = font;
             spanStart.innerText = valueBeforeStart;
-            inputRef.parentElement?.appendChild(spanStart);
+            input.parentElement?.appendChild(spanStart);
             const selLeft = spanStart.getBoundingClientRect().width;
             spanStart.remove();
 
@@ -56,7 +60,7 @@ export const RemoteCursor: React.FC<Props> = ({ cursor, inputRef }) => {
             spanEnd.style.whiteSpace = "pre";
             spanEnd.style.font = font;
             spanEnd.innerText = valueBeforeEnd;
-            inputRef.parentElement?.appendChild(spanEnd);
+            input.parentElement?.appendChild(spanEnd);
             const selRight = spanEnd.getBoundingClientRect().width;
             spanEnd.remove();
 
@@ -77,7 +81,7 @@ export const RemoteCursor: React.FC<Props> = ({ cursor, inputRef }) => {
                     top: 0,
                     width: 2,
                     height: height,
-                    backgroundColor: cursor.color,
+                    backgroundColor: cursor.color ?? "blue",
                     pointerEvents: "none",
                 }}
             />

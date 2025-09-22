@@ -17,4 +17,6 @@ export interface BlockType {
     text: string;
 }
 
-export type Actions = "enter" | "backspace";
+export type Actions = "change" | "enter" | "backspace" | "delete" | "arrowUp" | "arrowDown" | "arrowLeft" | "arrowRight";
+
+export type ScheduleUpdate = (action: Actions, cursor: CursorType, target?: BlockType | null, blocks?: BlockType[] | null) => void

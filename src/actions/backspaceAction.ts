@@ -1,7 +1,7 @@
 import { useCallback, type SetStateAction } from "react";
-import type { Actions, BlockType, CursorType } from "../types";
+import type { BlockType, CursorType, ScheduleUpdate } from "../types";
 
-const useOnBackspaceAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: (action: Actions, target: BlockType, blocks: BlockType[]) => void) => {
+const useOnBackspaceAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: ScheduleUpdate) => {
 
     return useCallback((blocks: BlockType[], id: number) => {
         blocks = [...blocks];
@@ -17,17 +17,17 @@ const useOnBackspaceAction = (setBlocks: React.Dispatch<SetStateAction<BlockType
         blocks[index - 1] = prevBlock;
         blocks.splice(index, 1);
 
-        scheduleUpdate("backspace", currentBlock, [prevBlock]);
-
-        setBlocks(blocks);
-
-        setCursor({
+        const newCursor = {
             blockId: prevBlock.id,
             position: newCursorPos
-        });
+        }
+
+        scheduleUpdate("backspace", newCursor, currentBlock, [prevBlock]);
+
+        setBlocks(blocks);
+        setCursor(newCursor);
 
         return { newCursorPos }
-
     }, [setBlocks, setCursor, scheduleUpdate])
 }
 

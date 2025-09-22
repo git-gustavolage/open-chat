@@ -1,26 +1,29 @@
 import { useCallback, type SetStateAction } from "react";
-import type { BlockType, CursorType } from "../types";
+import type { BlockType, CursorType, ScheduleUpdate } from "../types";
 
-const useCursorChangeAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>) => {
+const useCursorChangeAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdates: ScheduleUpdate) => {
 
-    return useCallback((e: React.ChangeEvent<HTMLInputElement>, id: number) => {
-        setBlocks((prev) => {
-            const updated = [...prev];
-            const index = updated.findIndex(block => block.id === id);
-            if (index >= 0) {
-                updated[index].text = e.target.value;
-            }
-            
-            return updated;
-        });
+    return useCallback((e: React.ChangeEvent<HTMLInputElement>, blocks: BlockType[], id: number) => {
+        blocks = [...blocks];
+        const index = blocks.findIndex(block => block.id === id);
 
-        setCursor({
+        const currentBlock = blocks[index];
+        currentBlock.text = e.target.value;
+
+        blocks[index] = currentBlock;
+
+        const newCursor = {
             blockId: id,
             position: e.target.selectionStart ?? 0,
-        });
-
+        }
         
-    }, [setBlocks, setCursor]);
+        
+        scheduleUpdates("change", newCursor, currentBlock);
+        
+        setCursor(newCursor);
+        setBlocks(blocks);
+        
+    }, [setBlocks, setCursor, scheduleUpdates]);
 }
 
 export { useCursorChangeAction }

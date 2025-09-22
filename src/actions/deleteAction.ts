@@ -1,28 +1,33 @@
 import { useCallback, type SetStateAction } from "react";
-import type { Block, Cursor } from "../types";
+import type { BlockType, CursorType, ScheduleUpdate } from "../types";
 
-const useOnDeleteAction = (setBlocks: React.Dispatch<SetStateAction<Block[]>>, setCursor: React.Dispatch<SetStateAction<Cursor>>) => {
+const useOnDeleteAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: ScheduleUpdate) => {
 
-    return useCallback((blocks: Block[], index: number, pos: number) => {
-        const newBlocks = [...blocks];
-        const currentText = newBlocks[index].text;
+    return useCallback((blocks: BlockType[], id: number) => {
+        blocks = [...blocks];
+        const index = blocks.findIndex(block => block.id === id);
 
-        const newIndex = index;
-        const newCursorPos = pos;
+        const currentBlock = blocks[index];
+        const nextBlock = blocks[index + 1];
 
-        const nextText = newBlocks[index + 1].text;
+        const newCursorPos = currentBlock.text.length;
 
-        newBlocks[index].text = currentText + nextText;
-        newBlocks.splice(index + 1, 1);
+        currentBlock.text += nextBlock.text;
+        blocks.splice(index + 1, 1);
 
-        setBlocks(newBlocks);
-        setCursor({
-            blockId: newIndex,
-            position: newCursorPos,
-        })
+        const newCursor = {
+            blockId: id,
+            position: newCursorPos
+        }
 
-        return { newIndex, newCursorPos }
-    }, [setBlocks, setCursor])
+        scheduleUpdate("delete", newCursor, currentBlock, [nextBlock]);
+
+        setBlocks(blocks);
+        setCursor(newCursor);
+
+        return { newCursorPos };
+
+    }, [setBlocks, setCursor, scheduleUpdate])
 }
 
 export { useOnDeleteAction }

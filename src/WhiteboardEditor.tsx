@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import type { Actions, BlockType, CursorType, RemoteCursorType } from "./types";
+import type { BlockType, CursorType } from "./types";
 import { useCursorChangeAction } from "./actions/cursorChangeAction";
 import { useOnEnterAction } from "./actions/enterAction";
 import { useOnBackspaceAction } from "./actions/backspaceAction";
@@ -10,30 +10,34 @@ import { useOnArrowLeftAction } from "./actions/arrowLeftAction";
 import { useOnArrowRightAction } from "./actions/arrowRightAction";
 import Block from "./Block";
 import Debug from "./components/Debug";
-
-
+import useSchedule from "./hooks/useSchedule";
 
 export default function WhiteboardEditor() {
     const [blocks, setBlocks] = useState<BlockType[]>([]);
     const [cursor, setCursor] = useState<CursorType>({ blockId: 0, position: 0 });
     const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
-    const [remoteCursors, setRemoteCursors] = useState<RemoteCursorType[]>([]);
+    const userIdRef = useRef(crypto.randomUUID());
 
-    const scheduleUpdates = useCallback((action: Actions, target: BlockType,  blocks: BlockType[]) => {
-        console.log(action, target, blocks);
-    }, []);
+    const { schedule: scheduleUpdates, remoteCursors } = useSchedule("room1", userIdRef.current, setBlocks);
 
-    const handleCursorChange = useCursorChangeAction(setBlocks, setCursor);
+    const selectBlock = (index: number, position: number) => {
+        setTimeout(() => {
+            const prevInput = inputsRef.current[index];
+            if (prevInput) {
+                prevInput.focus();
+                prevInput.setSelectionRange(position, position);
+            }
+        }, 0);
+    }
+
+    const handleChange = useCursorChangeAction(setBlocks, setCursor, scheduleUpdates);
     const handleEnter = useOnEnterAction(setBlocks, setCursor, scheduleUpdates);
     const handleBackspace = useOnBackspaceAction(setBlocks, setCursor, scheduleUpdates);
-    // const handleDelete = useOnDeleteAction(setBlocks, setCursor);
-    // const handleArrowUp = useOnArrowUpAction(setCursor);
-    // const handleArrowDown = useOnArrowDownAction(setCursor);
-    // const handleArrowLeft = useOnArrowLeftAction(setCursor);
-    // const handleArrowRight = useOnArrowRightAction(setCursor);
-
-    console.log(blocks);
-    
+    const handleDelete = useOnDeleteAction(setBlocks, setCursor, scheduleUpdates);
+    const handleArrowUp = useOnArrowUpAction(setCursor, scheduleUpdates);
+    const handleArrowDown = useOnArrowDownAction(setCursor, scheduleUpdates);
+    const handleArrowLeft = useOnArrowLeftAction(setCursor, scheduleUpdates);
+    const handleArrowRight = useOnArrowRightAction(setCursor, scheduleUpdates);
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, index: number, id: number) => {
         const input = inputsRef.current[index];
@@ -44,70 +48,47 @@ export default function WhiteboardEditor() {
         if (e.key === "Enter") {
             e.preventDefault();
             handleEnter(blocks, id, pos);
-            setTimeout(() => {
-                const prevInput = inputsRef.current[index + 1];
-                if (prevInput) {
-                    prevInput.focus();
-                    prevInput.setSelectionRange(0, 0);
-                }
-            }, 0);
+            selectBlock(index + 1, 0);
         }
 
         if (e.key === "Backspace" && pos === 0 && index > 0) {
             e.preventDefault();
             const { newCursorPos } = handleBackspace(blocks, id);
-            setTimeout(() => {
-                const prevInput = inputsRef.current[index - 1];
-                if (prevInput) {
-                    prevInput.focus();
-                    prevInput.setSelectionRange(newCursorPos, newCursorPos);
-                }
-            }, 0);
+            selectBlock(index - 1, newCursorPos);
         }
 
-        // if (e.key === "Delete" && pos === input.value.length && index < blocks.length - 1) {
-        //     e.preventDefault();
-        //     const { newIndex, newCursorPos } = handleDelete(blocks, index, pos);
-        //     setTimeout(() => {
-        //         input.focus();
-        //         input.setSelectionRange(newCursorPos, newCursorPos);
-        //     }, 0);
-        // }
+        if (e.key === "Delete" && pos === input.value.length && index < blocks.length - 1) {
+            e.preventDefault();
+            const { newCursorPos } = handleDelete(blocks, id);
+            selectBlock(index, newCursorPos);
+        }
 
-        // if (e.key === "ArrowUp" && index > 0) {
-        //     e.preventDefault();
-        //     handleArrowUp(inputsRef.current[index - 1], index, pos);
-        // }
+        if (e.key === "ArrowUp") {
+            e.preventDefault();
+            const { newCursorPos } = handleArrowUp(blocks, id, pos);
+            selectBlock(index - 1, newCursorPos);
+        }
 
-        // if (e.key === "ArrowDown" && index < blocks.length - 1) {
-        //     e.preventDefault();
-        //     handleArrowDown(inputsRef.current[index + 1], index, pos);
-        // }
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            const { newCursorPos } = handleArrowDown(blocks, id, pos);
+            selectBlock(index + 1, newCursorPos);
+        }
 
-        // if (e.key === "ArrowLeft") {
-        //     e.preventDefault();
-        //     const { newIndex, newCursorPos } = handleArrowLeft(blocks, index, pos, e.ctrlKey);
-        //     const input = inputsRef.current[newIndex];
-        //     if (input) {
-        //         input?.focus();
-        //         input?.setSelectionRange(newCursorPos, newCursorPos);
-        //     }
-        // }
+        if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            const { newIndex, newCursorPos } = handleArrowLeft(blocks, id, pos, e.ctrlKey);
+            selectBlock(newIndex, newCursorPos);
+        }
 
-        // if (e.key === "ArrowRight") {
-        //     e.preventDefault();
-        //     const { newIndex, newCursorPos } = handleArrowRight(blocks, index, pos, e.ctrlKey);
-        //     const input = inputsRef.current[newIndex];
-        //     if (input) {
-        //         input?.focus();
-        //         input?.setSelectionRange(newCursorPos, newCursorPos);
-        //     }
-        // }
-    }, [inputsRef, handleEnter, handleBackspace, blocks]);
+        if (e.key === "ArrowRight") {
+            e.preventDefault();
+            const { newIndex, newCursorPos } = handleArrowRight(blocks, id, pos, e.ctrlKey);
+            selectBlock(newIndex, newCursorPos);
+        }
+    }, [inputsRef, handleEnter, handleBackspace, handleDelete, handleArrowUp, handleArrowDown, handleArrowLeft, handleArrowRight, blocks]);
 
     const selectLastBlock = useCallback(() => {
-        console.log("Select last block");
-        
         if (blocks.length === 0) {
             const newId = Date.now() + Math.floor(Math.random() * 1000);
             const newBlock = { id: newId, text: "" };
@@ -141,11 +122,9 @@ export default function WhiteboardEditor() {
                 {blocks.map((block, i) => (
                     <Block
                         key={block.id}
-                        inputRef={(el) => {
-                            inputsRef.current[i] = el;
-                        }}
+                        inputRef={(el) => { inputsRef.current[i] = el }}
                         block={block}
-                        onChange={handleCursorChange}
+                        onChange={(e) => handleChange(e, blocks, block.id)}
                         onKeyDown={(e, id) => handleKeyDown(e, i, id)}
                         remoteCursors={remoteCursors}
                     />

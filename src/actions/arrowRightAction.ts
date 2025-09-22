@@ -1,9 +1,14 @@
 import { useCallback, type SetStateAction } from "react";
-import type { Block, Cursor } from "../types";
+import type { BlockType, CursorType, ScheduleUpdate } from "../types";
 
-export const useOnArrowRightAction = (setCursor: React.Dispatch<SetStateAction<Cursor>>) => {
-    return useCallback((blocks: Block[], index: number, pos: number, ctrl = false) => {
-        const block = blocks[index].text;
+export const useOnArrowRightAction = (setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: ScheduleUpdate) => {
+    return useCallback((blocks: BlockType[], id: number, pos: number, ctrl = false) => {
+        blocks = [...blocks];
+        const index = blocks.findIndex(block => block.id === id);
+
+        const currentBlock = blocks[index];
+        const newxtBlock = blocks[index + 1];
+
         let newIndex = index;
         let newCursorPos = pos;
 
@@ -11,41 +16,41 @@ export const useOnArrowRightAction = (setCursor: React.Dispatch<SetStateAction<C
 
             newCursorPos = pos + 1;
 
-            if (block && pos + 1 > block.length) {
-                if (index < blocks.length - 1) {
+            if (currentBlock && pos + 1 > currentBlock.text.length) {
+                if (newxtBlock) {
                     newIndex = index + 1;
                     newCursorPos = 0;
                 } else {
-                    newCursorPos = block.length;
+                    newCursorPos = currentBlock.text.length;
                 }
             }
         } else {
 
-            if (pos < block.length) {
-                const rightPart = block.slice(pos);
+            if (pos < currentBlock.text.length) {
+                const rightPart = currentBlock.text.slice(pos);
 
                 const match = rightPart.match(/\w[\wÀ-ú]*/);
                 if (match) {
                     newCursorPos = pos + rightPart.indexOf(match[0]) + match[0].length;
                 } else {
-                    newCursorPos = block.length;
+                    newCursorPos = currentBlock.text.length;
                 }
             } else {
 
-                if (index < blocks.length - 1) {
+                if (newxtBlock) {
                     newIndex = index + 1;
                     newCursorPos = 0;
                 } else {
-                    newCursorPos = block.length;
+                    newCursorPos = currentBlock.text.length;
                 }
             }
         }
 
         setCursor({
-            blockId: newIndex,
+            blockId: blocks[newIndex].id,
             position: Math.min(newCursorPos, blocks[newIndex]?.text.length ?? 0),
         });
 
         return { newIndex, newCursorPos };
-    }, [setCursor]);
+    }, [setCursor, scheduleUpdate]);
 };

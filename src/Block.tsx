@@ -37,6 +37,4 @@ export default function Block({ block, onChange, onKeyDown, remoteCursors, input
             </div>
         </>
     )
-
-
 }
