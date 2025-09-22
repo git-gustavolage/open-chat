@@ -78,7 +78,8 @@ export default function useSchedule(roomId: string, userId: string, setBlocks: R
     }
 
     useEffect(() => {
-        const socket = io("http://localhost:9001", { query: { roomId, userId } });
+        const url = import.meta.env.VITE_SOCKET_URL;
+        const socket = io(url, { query: { roomId, userId } });
 
         socketRef.current = socket;
 
