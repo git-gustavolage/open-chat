@@ -9,14 +9,16 @@ import { useOnArrowDownAction } from "./actions/arrowDownAction";
 import { useOnArrowLeftAction } from "./actions/arrowLeftAction";
 import { useOnArrowRightAction } from "./actions/arrowRightAction";
 import Block from "./Block";
-import Debug from "./components/Debug";
 import useSchedule from "./hooks/useSchedule";
+import Debug from "./components/Debug";
 
 export default function WhiteboardEditor() {
     const [blocks, setBlocks] = useState<BlockType[]>([]);
     const [cursor, setCursor] = useState<CursorType>({ blockId: 0, position: 0 });
     const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
     const userIdRef = useRef(crypto.randomUUID());
+
+    const debugRef = useRef(false);
 
     const { schedule: scheduleUpdates, remoteCursors } = useSchedule("room1", userIdRef.current, setBlocks);
 
@@ -131,7 +133,7 @@ export default function WhiteboardEditor() {
                 ))}
             </div>
 
-            {/**<Debug cursor={cursor} blocks={blocks} />**/}
+            {debugRef.current && <Debug cursor={cursor} blocks={blocks} />}
         </div>
     );
 }
