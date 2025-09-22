@@ -131,7 +131,7 @@ export default function WhiteboardEditor() {
                 ))}
             </div>
 
-            <Debug cursor={cursor} blocks={blocks} />
+            {/**<Debug cursor={cursor} blocks={blocks} />**/}
         </div>
     );
 }

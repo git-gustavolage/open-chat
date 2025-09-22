@@ -31,10 +31,7 @@ export default function useSchedule(roomId: string, userId: string, setBlocks: R
     }
 
     const handleInit = useCallback(({ data }: { data: RoomDataType }) => {
-
         const { blocks, cursors } = data;
-
-        console.log("INIT", blocks, cursors, userId);
 
         if (blocks) {
             setBlocks(blocks);
@@ -46,9 +43,6 @@ export default function useSchedule(roomId: string, userId: string, setBlocks: R
     }, [setBlocks]);
 
     const handleChange = useCallback(({ updatedBlocks, updatedCursors }: RoomUpdatedType) => {
-        console.log("📩 Received change");
-        console.log(updatedBlocks, updatedCursors);
-
         if (updatedBlocks) {
             setBlocks(updatedBlocks);
         }
@@ -72,9 +66,6 @@ export default function useSchedule(roomId: string, userId: string, setBlocks: R
     }, [setBlocks]);
 
     const handleCursorRemove = (userId: string) => {
-
-        console.log("removing cursor from:", userId);
-
         setRemoteCursors(prev => {
             const cursors = [...prev];
             const index = cursors.findIndex(c => c.userId === userId);

@@ -12,9 +12,6 @@ export const RemoteCursor: React.FC<Props> = ({ cursor, inputRef }) => {
     const [selectionLeft, setSelectionLeft] = useState(0);
     const [selectionWidth, setSelectionWidth] = useState(0);
 
-    console.log(cursor);
-    
-
     useEffect(() => {
         if (!inputRef.current) return;
         const input = inputRef.current;
@@ -100,6 +97,4 @@ export const RemoteCursor: React.FC<Props> = ({ cursor, inputRef }) => {
             )}
         </>
     );
-
-
 };
