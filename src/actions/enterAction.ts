@@ -5,23 +5,19 @@ import { v4 as uuidv4 } from 'uuid';
 const useOnEnterAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: ScheduleUpdate) => {
 
     return useCallback((blocks: BlockType[], id: string, pos: number) => {
-        blocks = [...blocks];
         const index = blocks.findIndex(block => block.id === id);
-        const currentBlock = blocks[index];
+        if (index === -1) return;
 
-        const prevText = currentBlock.text.slice(0, pos);
-        const afterText = currentBlock.text.slice(pos);
+        const currentBlock: BlockType = { ...blocks[index], text: blocks[index].text.slice(0, pos) };
+        const newBlock: BlockType = { id: uuidv4(), text: blocks[index].text.slice(pos) };
 
-        currentBlock.text = prevText;
-
-        const newBlock: BlockType = {
-            id: uuidv4(),
-            text: afterText,
-        }
-
-        blocks[index] = currentBlock;
-        blocks.splice(index + 1, 0, newBlock);
-
+        const newBlocks = [
+            ...blocks.slice(0, index),
+            currentBlock,
+            newBlock,
+            ...blocks.slice(index + 1),
+        ];
+        
         const newCursor = {
             blockId: newBlock.id,
             position: 0
@@ -30,11 +26,10 @@ const useOnEnterAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>
         scheduleUpdate("enter", newCursor, currentBlock.id, {
             updated: [currentBlock],
             created: [newBlock],
-        })
+        });
 
-        setBlocks(blocks);
+        setBlocks(newBlocks);
         setCursor(newCursor);
-
     }, [setBlocks, setCursor, scheduleUpdate]);
 }
 export { useOnEnterAction }
