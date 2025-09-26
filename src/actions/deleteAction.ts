@@ -3,7 +3,7 @@ import type { BlockType, CursorType, ScheduleUpdate } from "../types";
 
 const useOnDeleteAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: ScheduleUpdate) => {
 
-    return useCallback((blocks: BlockType[], id: number) => {
+    return useCallback((blocks: BlockType[], id: string) => {
         blocks = [...blocks];
         const index = blocks.findIndex(block => block.id === id);
 
@@ -20,7 +20,10 @@ const useOnDeleteAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>
             position: newCursorPos
         }
 
-        scheduleUpdate("delete", newCursor, currentBlock, [nextBlock]);
+        scheduleUpdate("delete", newCursor, currentBlock.id, {
+            updated: [currentBlock],
+            deleted: [nextBlock],
+        });
 
         setBlocks(blocks);
         setCursor(newCursor);

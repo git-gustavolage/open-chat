@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import type { BlockType, CursorType } from "./types";
 import { useCursorChangeAction } from "./actions/cursorChangeAction";
 import { useOnEnterAction } from "./actions/enterAction";
@@ -15,25 +15,25 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default function WhiteboardEditor() {
     const [blocks, setBlocks] = useState<BlockType[]>([]);
-    const [cursor, setCursor] = useState<CursorType>({ blockId: 0, position: 0 });
+    const [cursor, setCursor] = useState<CursorType>({ blockId: "", position: 0 });
     const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
     const userIdRef = useRef(uuidv4());
 
-    const debugRef = useRef(false);
+    const debugRef = useRef(true);
 
     const { schedule: scheduleUpdates, remoteCursors } = useSchedule("room1", userIdRef.current, setBlocks);
 
     const selectBlock = (index: number, position: number) => {
         setTimeout(() => {
-            const prevInput = inputsRef.current[index];
-            if (prevInput) {
-                prevInput.focus();
-                prevInput.setSelectionRange(position, position);
+            const input = inputsRef.current[index];
+            if (input) {
+                input.focus();
+                input.setSelectionRange(position, position);
             }
         }, 0);
     }
 
-    const handleChange = useCursorChangeAction(setBlocks, setCursor, scheduleUpdates);
+    const cahngeAction = useCursorChangeAction(setBlocks, setCursor, scheduleUpdates);
     const handleEnter = useOnEnterAction(setBlocks, setCursor, scheduleUpdates);
     const handleBackspace = useOnBackspaceAction(setBlocks, setCursor, scheduleUpdates);
     const handleDelete = useOnDeleteAction(setBlocks, setCursor, scheduleUpdates);
@@ -42,7 +42,12 @@ export default function WhiteboardEditor() {
     const handleArrowLeft = useOnArrowLeftAction(setCursor, scheduleUpdates);
     const handleArrowRight = useOnArrowRightAction(setCursor, scheduleUpdates);
 
-    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, index: number, id: number) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>, blocks: BlockType[], id: string) => {
+        const { newIndex, newCursorPos } = cahngeAction(e, blocks, id);
+        selectBlock(newIndex, newCursorPos);
+    }
+
+    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, index: number, id: string) => {
         const input = inputsRef.current[index];
         if (!input) return;
 
@@ -93,7 +98,7 @@ export default function WhiteboardEditor() {
 
     const selectLastBlock = useCallback(() => {
         if (blocks.length === 0) {
-            const newId = Date.now() + Math.floor(Math.random() * 1000);
+            const newId = uuidv4();
             const newBlock = { id: newId, text: "" };
             setBlocks([newBlock]);
         }
@@ -103,8 +108,8 @@ export default function WhiteboardEditor() {
         const length = lastBlock.value.length;
         lastBlock.focus();
         lastBlock.setSelectionRange(length, length);
-        setCursor({ blockId: lastIndex, position: length });
-    }, [blocks.length]);
+        setCursor({ blockId: blocks[blocks.length - 1].id, position: length });
+    }, [blocks]);
 
     const handleEditorClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         if (e.target === e.currentTarget) {
@@ -116,22 +121,26 @@ export default function WhiteboardEditor() {
         selectLastBlock();
     }, []);
 
+    const renderedBlocks = useMemo(() => {
+        return blocks.map((block, i) => (
+            <Block
+                key={block.id}
+                inputRef={(el) => { inputsRef.current[i] = el }}
+                block={block}
+                onChange={(e) => handleChange(e, blocks, block.id)}
+                onKeyDown={(e, id) => handleKeyDown(e, i, id)}
+                remoteCursors={remoteCursors}
+            />
+        ));
+    }, [blocks, remoteCursors, handleChange, handleKeyDown]);
+
     return (
         <div className="w-full h-full flex flex-col items-center justify-between gap-8 pt-[100px]">
             <div
                 className="w-[800px] max-lg:w-[600px] max-md:w-[95%] h-[calc(100%-140px)] bg-white py-8 px-12 rounded-md shadow-sm overflow-y-auto"
                 onClick={handleEditorClick}
             >
-                {blocks.map((block, i) => (
-                    <Block
-                        key={block.id}
-                        inputRef={(el) => { inputsRef.current[i] = el }}
-                        block={block}
-                        onChange={(e) => handleChange(e, blocks, block.id)}
-                        onKeyDown={(e, id) => handleKeyDown(e, i, id)}
-                        remoteCursors={remoteCursors}
-                    />
-                ))}
+                {renderedBlocks}
             </div>
 
             {debugRef.current && <Debug cursor={cursor} blocks={blocks} />}

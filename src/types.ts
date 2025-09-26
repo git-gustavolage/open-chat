@@ -1,22 +1,28 @@
+export interface BlockType {
+    id: string;
+    text: string;
+}
+
 export type CursorType = {
-    blockId: number;
+    blockId: BlockType["id"];
     position: number;
     selectionEnd?: number
 };
 
 export type RemoteCursorType = {
     userId: string;
-    blockId: number;
+    blockId: BlockType["id"];
     position: number;
     selectionEnd?: number;
     color: string;
 };
 
-export interface BlockType {
-    id: number;
-    text: string;
-}
-
 export type Actions = "change" | "enter" | "backspace" | "delete" | "arrowUp" | "arrowDown" | "arrowLeft" | "arrowRight";
 
-export type ScheduleUpdate = (action: Actions, cursor: CursorType, target?: BlockType | null, blocks?: BlockType[] | null) => void
+export type UpdateRegister = {
+    created?: BlockType[] | null,
+    updated?: BlockType[] | null,
+    deleted?: BlockType[] | null,
+}
+
+export type ScheduleUpdate = (action: Actions, cursor: CursorType, target_id?: BlockType["id"], register?: UpdateRegister | null) => void

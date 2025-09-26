@@ -3,7 +3,7 @@ import type { BlockType, CursorType, ScheduleUpdate } from "../types";
 
 const useOnBackspaceAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: ScheduleUpdate) => {
 
-    return useCallback((blocks: BlockType[], id: number) => {
+    return useCallback((blocks: BlockType[], id: string) => {
         blocks = [...blocks];
         const index = blocks.findIndex(block => block.id === id);
 
@@ -22,7 +22,10 @@ const useOnBackspaceAction = (setBlocks: React.Dispatch<SetStateAction<BlockType
             position: newCursorPos
         }
 
-        scheduleUpdate("backspace", newCursor, currentBlock, [prevBlock]);
+        scheduleUpdate("backspace", newCursor, currentBlock.id, {
+            deleted: [currentBlock],
+            updated: [prevBlock],
+        });
 
         setBlocks(blocks);
         setCursor(newCursor);

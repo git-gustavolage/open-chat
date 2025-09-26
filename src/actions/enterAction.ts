@@ -1,9 +1,10 @@
 import { useCallback, type SetStateAction } from "react";
 import type { BlockType, CursorType, ScheduleUpdate } from "../types";
+import { v4 as uuidv4 } from 'uuid';
 
 const useOnEnterAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: ScheduleUpdate) => {
 
-    return useCallback((blocks: BlockType[], id: number, pos: number) => {
+    return useCallback((blocks: BlockType[], id: string, pos: number) => {
         blocks = [...blocks];
         const index = blocks.findIndex(block => block.id === id);
         const currentBlock = blocks[index];
@@ -14,7 +15,7 @@ const useOnEnterAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>
         currentBlock.text = prevText;
 
         const newBlock: BlockType = {
-            id: Date.now() + Math.floor(Math.random() * 1000),
+            id: uuidv4(),
             text: afterText,
         }
 
@@ -26,7 +27,10 @@ const useOnEnterAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>
             position: 0
         };
 
-        scheduleUpdate("enter", newCursor, currentBlock, [newBlock])
+        scheduleUpdate("enter", newCursor, currentBlock.id, {
+            updated: [currentBlock],
+            created: [newBlock],
+        })
 
         setBlocks(blocks);
         setCursor(newCursor);
