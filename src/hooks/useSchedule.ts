@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef, type SetStateAction, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
-import type { BlockType, RemoteCursorType, ScheduleUpdate } from "../types";
+import type { BlockType, RemoteCursorType, ScheduleUpdate, UpdateRegister } from "../types";
 
 type RoomUpdatedType = {
-    updatedBlocks: BlockType[] | null,
     updatedCursors: RemoteCursorType[] | null,
-    userId: string,
+    dispatch: UpdateRegister,
+    create_start?: number,
 }
 
 type RoomDataType = {
@@ -42,10 +42,52 @@ export default function useSchedule(roomId: string, userId: string, setBlocks: R
         }
     }, [setBlocks]);
 
-    const handleChange = useCallback(({ updatedBlocks, updatedCursors }: RoomUpdatedType) => {
-        if (updatedBlocks) {
-            setBlocks(updatedBlocks);
-        }
+    const handleChange = useCallback(({ updatedCursors, dispatch, create_start }: RoomUpdatedType) => {
+
+        const { updated, created, deleted } = dispatch;
+
+        setBlocks(prev => {
+            let next = [...prev];
+
+            updated?.forEach(item => {
+                const index = next.findIndex(b => b.id === item.id);
+                if (index === -1) {
+                    next = [...next, item];
+                } else {
+                    next = [
+                        ...next.slice(0, index),
+                        item,
+                        ...next.slice(index + 1),
+                    ];
+                }
+            });
+
+            created?.forEach((item, i) => {
+                if (!create_start) {
+                    create_start = next.findIndex(
+                        b => b.id === updated?.[updated?.length - 1]?.id
+                    );
+                    if (create_start < 0) {
+                        create_start = next.length - 1;
+                    }
+                }
+
+                next = [
+                    ...next.slice(0, create_start + i + 1),
+                    item,
+                    ...next.slice(create_start + i + 1),
+                ];
+            });
+
+            deleted?.forEach(item => {
+                const index = next.findIndex(block => block.id === item.id);
+                if (index >= 0) {
+                    next = [...next.slice(0, index), ...next.slice(index + 1)];
+                }
+            });
+
+            return next;
+        });
 
         setRemoteCursors((prev) => {
             const cursors = [...prev];
@@ -63,7 +105,7 @@ export default function useSchedule(roomId: string, userId: string, setBlocks: R
 
             return cursors;
         })
-    }, [setBlocks]);
+    }, [setBlocks, setRemoteCursors]);
 
     const handleCursorRemove = (userId: string) => {
         setRemoteCursors(prev => {
@@ -97,7 +139,7 @@ export default function useSchedule(roomId: string, userId: string, setBlocks: R
     }, []);
 
 
-    const schedule: ScheduleUpdate = (action, cursor, target, blocks) => {
+    const schedule: ScheduleUpdate = (action, cursor, target_id, register) => {
         if (!socketRef.current) return;
         if (!connected) return;
 
@@ -105,20 +147,19 @@ export default function useSchedule(roomId: string, userId: string, setBlocks: R
 
         switch (action) {
             case "change":
-                if (!target) return;
-                socketRef.current.emit("change", { target, cursor: newCursor });
+                socketRef.current.emit("change", { cursor: newCursor, target_id, register });
                 break;
 
             case "enter":
-                socketRef.current.emit("enter", { cursor: newCursor, target, blocks });
+                socketRef.current.emit("enter", { cursor: newCursor, target_id, register });
                 break;
 
             case "backspace":
-                socketRef.current.emit("backspace", { cursor: newCursor, target, blocks });
+                socketRef.current.emit("backspace", { cursor: newCursor, target_id, register });
                 break;
             
             case "delete":
-                socketRef.current.emit("delete", { cursor: newCursor, target, blocks })
+                socketRef.current.emit("delete", { cursor: newCursor, target_id, register })
                 break;
         }
     };
