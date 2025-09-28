@@ -17,7 +17,7 @@ export type RemoteCursorType = {
     color: string;
 };
 
-export type Actions = "change" | "enter" | "backspace" | "delete" | "arrowUp" | "arrowDown" | "arrowLeft" | "arrowRight";
+export type Actions = "change" | "enter" | "backspace" | "delete" | "arrowChange";
 
 export type UpdateRegister = {
     created?: BlockType[] | null,

@@ -48,7 +48,7 @@ export const useOnArrowLeftAction = (setCursor: React.Dispatch<SetStateAction<Cu
             position: Math.max(0, newCursorPos),
         }
 
-        scheduleUpdate("arrowLeft", newCursor);
+        scheduleUpdate("arrowChange", newCursor);
 
         setCursor(newCursor);
 

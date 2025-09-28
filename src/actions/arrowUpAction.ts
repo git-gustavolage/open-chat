@@ -17,7 +17,7 @@ export const useOnArrowUpAction = (setCursor: React.Dispatch<SetStateAction<Curs
             position: newCursorPos,
         };
 
-        scheduleUpdate("arrowUp", newCursor);
+        scheduleUpdate("arrowChange", newCursor);
         setCursor(newCursor);
     }, [setCursor, scheduleUpdate]);
 };

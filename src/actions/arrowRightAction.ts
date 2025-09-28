@@ -51,6 +51,8 @@ export const useOnArrowRightAction = (setCursor: React.Dispatch<SetStateAction<C
             position: Math.min(newCursorPos, blocks[newIndex]?.text.length ?? 0),
         }
 
+        scheduleUpdate("arrowChange", newCursor);
+
         setCursor(newCursor);
 
         return newCursor;

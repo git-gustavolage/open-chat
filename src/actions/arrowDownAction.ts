@@ -17,7 +17,7 @@ export const useOnArrowDownAction = (setCursor: React.Dispatch<SetStateAction<Cu
             position: newCursorPos,
         };
 
-        scheduleUpdate("arrowDown", newCursor);
+        scheduleUpdate("arrowChange", newCursor);
         setCursor(newCursor);
     }, [setCursor, scheduleUpdate]);
 };

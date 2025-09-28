@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from "react";
+import { memo, useEffect, useRef, useState, type ClipboardEvent } from "react";
 import { RemoteCursor } from "./RemoteCursor";
 import type { RemoteCursorType } from "./types";
 
@@ -7,12 +7,14 @@ interface BlocksProps {
     value: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>, id: string) => void;
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>, id: string) => void;
+    onPaste?: (e: ClipboardEvent<HTMLInputElement>) => void;
     inputRef: (el: HTMLInputElement | null) => void;
     remoteCursors: RemoteCursorType[];
 }
 
-function BlockComponent({ id, value, onChange, onKeyDown, inputRef, remoteCursors }: BlocksProps) {
+function BlockComponent({ id, value, onChange, onKeyDown, onPaste, inputRef, remoteCursors }: BlocksProps) {
     const localRef = useRef<HTMLInputElement | null>(null);
+    const [images, setImages] = useState<string[]>([]);
 
     useEffect(() => {
         const el = localRef.current;
@@ -24,7 +26,12 @@ function BlockComponent({ id, value, onChange, onKeyDown, inputRef, remoteCursor
     }, [inputRef]);
 
     const renderedCursors = remoteCursors.map(cursor => (
-        <RemoteCursor key={cursor.userId} cursor={cursor} inputRef={localRef} username={cursor.userId} />
+        <RemoteCursor
+            key={cursor.userId}
+            cursor={cursor}
+            inputRef={localRef}
+            username={cursor.userId}
+        />
     ));
 
     return (
@@ -34,9 +41,20 @@ function BlockComponent({ id, value, onChange, onKeyDown, inputRef, remoteCursor
                 value={value}
                 onChange={(e) => onChange(e, id)}
                 onKeyDown={(e) => onKeyDown(e, id)}
+                onPaste={onPaste}
                 className="block w-full outline-none"
                 spellCheck="false"
             />
+            <div className="mt-2 flex flex-wrap gap-2">
+                {images.map((src, idx) => (
+                    <img
+                        key={idx}
+                        src={src}
+                        alt={`colada-${idx}`}
+                        className="max-w-[200px] max-h-[200px] border rounded"
+                    />
+                ))}
+            </div>
             {renderedCursors}
         </div>
     );
