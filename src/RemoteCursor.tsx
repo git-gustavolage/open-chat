@@ -3,10 +3,11 @@ import type { RemoteCursorType } from "./types";
 
 type Props = {
     cursor: RemoteCursorType;
-    inputRef: React.RefObject<HTMLInputElement | null>
+    inputRef: React.RefObject<HTMLInputElement | null>;
+    username: string;
 };
 
-export const RemoteCursor: React.FC<Props> = ({ cursor, inputRef }) => {
+export const RemoteCursor: React.FC<Props> = ({ cursor, inputRef, username }) => {
     const [left, setLeft] = useState(0);
     const [height, setHeight] = useState(0);
     const [selectionLeft, setSelectionLeft] = useState(0);
@@ -68,7 +69,6 @@ export const RemoteCursor: React.FC<Props> = ({ cursor, inputRef }) => {
         }
     }, [cursor.position, cursor.selectionEnd, inputRef]);
 
-
     return (
         <>
             <div
@@ -82,6 +82,19 @@ export const RemoteCursor: React.FC<Props> = ({ cursor, inputRef }) => {
                     pointerEvents: "none",
                 }}
             />
+            <div
+                className="rounded-t-md text-xs cursor-none select-none -top-5 text-white"
+                style={{
+                    position: "absolute",
+                    left: left,
+                    backgroundColor: cursor.color ?? "blue",
+                    padding: "2px 4px",
+                    pointerEvents: "none",
+                    whiteSpace: "nowrap",
+                }}
+            >
+                {username}
+            </div>
             {selectionWidth > 0 && (
                 <div
                     style={{
@@ -90,7 +103,7 @@ export const RemoteCursor: React.FC<Props> = ({ cursor, inputRef }) => {
                         top: 0,
                         width: selectionWidth,
                         height: height,
-                        backgroundColor: `${cursor.color}33`,
+                        backgroundColor: `${cursor.color ?? "blue"}33`,
                         pointerEvents: "none",
                     }}
                 />

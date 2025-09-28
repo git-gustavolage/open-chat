@@ -2,7 +2,7 @@ import { useCallback, type SetStateAction } from "react";
 import type { BlockType, CursorType, ScheduleUpdate } from "../types";
 
 export const useOnArrowLeftAction = (setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: ScheduleUpdate) => {
-    return useCallback((blocks: BlockType[], id: number, pos: number, ctrl = false) => {
+    return useCallback((blocks: BlockType[], id: string, pos: number, ctrl = false) => {
         blocks = [...blocks];
         const index = blocks.findIndex(block => block.id === id);
 
@@ -52,6 +52,6 @@ export const useOnArrowLeftAction = (setCursor: React.Dispatch<SetStateAction<Cu
 
         setCursor(newCursor);
 
-        return { newIndex, newCursorPos };
+        return newCursor;
     }, [setCursor, scheduleUpdate]);
 };

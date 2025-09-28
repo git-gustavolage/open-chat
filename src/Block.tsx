@@ -1,46 +1,53 @@
-import { useEffect, useRef, memo } from "react";
-import type { BlockType, RemoteCursorType } from "./types";
+import { memo, useEffect, useRef } from "react";
 import { RemoteCursor } from "./RemoteCursor";
+import type { RemoteCursorType } from "./types";
 
 interface BlocksProps {
-    block: BlockType;
+    id: string;
+    value: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>, id: string) => void;
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>, id: string) => void;
-    remoteCursors: RemoteCursorType[];
     inputRef: (el: HTMLInputElement | null) => void;
+    remoteCursors: RemoteCursorType[];
 }
 
-function BlockComponent({ block, onChange, onKeyDown, remoteCursors, inputRef }: BlocksProps) {
+function BlockComponent({ id, value, onChange, onKeyDown, inputRef, remoteCursors }: BlocksProps) {
     const localRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
-        if (inputRef) inputRef(localRef.current);
-    }, [inputRef, block]);
+        const el = localRef.current;
+        if (inputRef) inputRef(el);
+
+        return () => {
+            if (inputRef) inputRef(null);
+        };
+    }, [inputRef]);
+
+    const renderedCursors = remoteCursors.map(cursor => (
+        <RemoteCursor key={cursor.userId} cursor={cursor} inputRef={localRef} username={cursor.userId} />
+    ));
 
     return (
         <div className="relative">
             <input
                 ref={localRef}
-                value={block.text}
-                onChange={(e) => onChange(e, block.id)}
-                onKeyDown={(e) => onKeyDown(e, block.id)}
+                value={value}
+                onChange={(e) => onChange(e, id)}
+                onKeyDown={(e) => onKeyDown(e, id)}
                 className="block w-full outline-none"
                 spellCheck="false"
             />
-            {remoteCursors
-                .filter((c) => c.blockId === block.id)
-                .map((c) => (
-                    <RemoteCursor key={c.userId} cursor={c} inputRef={localRef} />
-                ))}
+            {renderedCursors}
         </div>
     );
 }
 
 const Block = memo(BlockComponent, (prev, next) => {
-    return (
-        prev.block.id === next.block.id &&
-        prev.block.text === next.block.text
-    );
+    if (prev.id !== next.id) return false;
+    if (prev.value !== next.value) return false;
+    if (prev.remoteCursors !== next.remoteCursors) return false;
+
+    return true;
 });
 
 export default Block;

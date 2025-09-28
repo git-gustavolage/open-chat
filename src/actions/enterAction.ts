@@ -1,40 +1,57 @@
 import { useCallback, type SetStateAction } from "react";
 import type { BlockType, CursorType, ScheduleUpdate } from "../types";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
-const useOnEnterAction = (setBlocks: React.Dispatch<SetStateAction<BlockType[]>>, setCursor: React.Dispatch<SetStateAction<CursorType>>, scheduleUpdate: ScheduleUpdate) => {
+const useOnEnterAction = (
+    setBlocks: React.Dispatch<SetStateAction<Map<string, BlockType>>>,
+    setOrder: React.Dispatch<SetStateAction<string[]>>,
+    setCursor: React.Dispatch<SetStateAction<CursorType>>,
+    scheduleUpdate: ScheduleUpdate
+) => {
+    return useCallback((blocks: Map<string, BlockType>, order: string[], id: string, pos: number) => {
+        const index = order.findIndex((blockId) => blockId === id);
+        if (index === -1) return null;
 
-    return useCallback((blocks: BlockType[], id: string, pos: number) => {
-        blocks = [...blocks];
-        const index = blocks.findIndex(block => block.id === id);
-        const currentBlock = blocks[index];
+        const currentBlock = blocks.get(id);
+        if (!currentBlock) return null;
 
-        const prevText = currentBlock.text.slice(0, pos);
+        const beforeText = currentBlock.text.slice(0, pos);
         const afterText = currentBlock.text.slice(pos);
 
-        currentBlock.text = prevText;
+        const updatedBlock: BlockType = {
+            ...currentBlock,
+            text: beforeText,
+        };
 
         const newBlock: BlockType = {
             id: uuidv4(),
             text: afterText,
-        }
-
-        blocks[index] = currentBlock;
-        blocks.splice(index + 1, 0, newBlock);
-
-        const newCursor = {
-            blockId: newBlock.id,
-            position: 0
         };
 
-        scheduleUpdate("enter", newCursor, currentBlock.id, {
-            updated: [currentBlock],
-            created: [newBlock],
-        })
+        const newBlocks = new Map(blocks);
+        newBlocks.set(updatedBlock.id, updatedBlock);
+        newBlocks.set(newBlock.id, newBlock);
 
-        setBlocks(blocks);
+        const newOrder = [...order];
+        newOrder.splice(index + 1, 0, newBlock.id);
+
+        setBlocks(newBlocks);
+        setOrder(newOrder);
+
+        const newCursor: CursorType = {
+            blockId: newBlock.id,
+            position: 0,
+        };
+
+        scheduleUpdate("enter", newCursor, updatedBlock.id, {
+            updated: [updatedBlock],
+            created: [newBlock],
+        });
+
         setCursor(newCursor);
 
-    }, [setBlocks, setCursor, scheduleUpdate]);
-}
-export { useOnEnterAction }
+        return { newCursor, newBlocks, newOrder };
+    }, [setBlocks, setOrder, setCursor, scheduleUpdate]);
+};
+
+export { useOnEnterAction };

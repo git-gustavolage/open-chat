@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import type { BlockType, CursorType } from "./types";
-import { useCursorChangeAction } from "./actions/cursorChangeAction";
+import type { BlockType, CursorType, RemoteCursorType } from "./types";
+import { useChangeAction } from "./actions/changeAction";
 import { useOnEnterAction } from "./actions/enterAction";
 import { useOnBackspaceAction } from "./actions/backspaceAction";
 import { useOnDeleteAction } from "./actions/deleteAction";
@@ -11,105 +11,153 @@ import { useOnArrowRightAction } from "./actions/arrowRightAction";
 import Block from "./Block";
 import useSchedule from "./hooks/useSchedule";
 import Debug from "./components/Debug";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
-export default function WhiteboardEditor() {
-    const [blocks, setBlocks] = useState<BlockType[]>([]);
+interface WhiteboardEditorProps {
+    roomId: string;
+    username: string;
+}
+
+export default function WhiteboardEditor({ roomId, username }: WhiteboardEditorProps) {
+    const [blocks, setBlocks] = useState<Map<string, BlockType>>(new Map());
+    const [order, setOrder] = useState<string[]>([]);
     const [cursor, setCursor] = useState<CursorType>({ blockId: "", position: 0 });
-    const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
-    const userIdRef = useRef(uuidv4());
+    const inputsRef = useRef<Map<string, HTMLInputElement | null>>(new Map());
+    const blocksRef = useRef(blocks);
+    const orderRef = useRef(order);
 
-    const debugRef = useRef(true);
+    const debugRef = useRef(false);
+    
+    const { schedule: scheduleUpdates, remoteCursors } = useSchedule(roomId, username, setBlocks, setOrder);
 
-    const { schedule: scheduleUpdates, remoteCursors } = useSchedule("room1", userIdRef.current, setBlocks);
+    useEffect(() => {
+        blocksRef.current = blocks;
+    }, [blocks]);
 
-    const selectBlock = (index: number, position: number) => {
-        setTimeout(() => {
-            const input = inputsRef.current[index];
-            if (input) {
-                input.focus();
-                input.setSelectionRange(position, position);
-            }
-        }, 0);
-    }
+    useEffect(() => {
+        orderRef.current = order;
+    }, [order]);
 
-    const cahngeAction = useCursorChangeAction(setBlocks, setCursor, scheduleUpdates);
-    const handleEnter = useOnEnterAction(setBlocks, setCursor, scheduleUpdates);
-    const handleBackspace = useOnBackspaceAction(setBlocks, setCursor, scheduleUpdates);
-    const handleDelete = useOnDeleteAction(setBlocks, setCursor, scheduleUpdates);
+    useEffect(() => {
+        const { blockId, position } = cursor;
+        if (!blockId) return;
+
+        const input = inputsRef.current.get(blockId);
+        if (input) {
+            input.focus();
+            input.setSelectionRange(position, position);
+        }
+    }, [cursor]);
+
+    const changeAction = useChangeAction(setBlocks, setOrder, setCursor, scheduleUpdates);
+    const handleEnter = useOnEnterAction(setBlocks, setOrder, setCursor, scheduleUpdates);
+    const handleBackspace = useOnBackspaceAction(setBlocks, setOrder, setCursor, scheduleUpdates);
+    const handleDelete = useOnDeleteAction(setBlocks, setOrder, setCursor, scheduleUpdates);
     const handleArrowUp = useOnArrowUpAction(setCursor, scheduleUpdates);
     const handleArrowDown = useOnArrowDownAction(setCursor, scheduleUpdates);
     const handleArrowLeft = useOnArrowLeftAction(setCursor, scheduleUpdates);
     const handleArrowRight = useOnArrowRightAction(setCursor, scheduleUpdates);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>, blocks: BlockType[], id: string) => {
-        const { newIndex, newCursorPos } = cahngeAction(e, blocks, id);
-        selectBlock(newIndex, newCursorPos);
-    }
+    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, id: string) => {
+        changeAction(e, blocksRef.current, orderRef.current, id);
+    }, [changeAction]);
 
-    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, index: number, id: string) => {
-        const input = inputsRef.current[index];
+    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, id: string) => {
+        const input = inputsRef.current.get(id);
         if (!input) return;
 
+        const index = orderRef.current.findIndex(item => item === id);
+        if (index === -1) return;
+
         const pos = input.selectionStart ?? 0;
+        let currentBlocks = blocksRef.current;
+        let currentOrder = orderRef.current;
+        let blockList = currentOrder.map((blockId) => currentBlocks.get(blockId)!);
 
         if (e.key === "Enter") {
             e.preventDefault();
-            handleEnter(blocks, id, pos);
-            selectBlock(index + 1, 0);
+            const result = handleEnter(currentBlocks, currentOrder, id, pos);
+            if (result) {
+                currentBlocks = result.newBlocks;
+                currentOrder = result.newOrder;
+                blockList = currentOrder.map((blockId) => currentBlocks.get(blockId)!);
+            }
         }
 
         if (e.key === "Backspace" && pos === 0 && index > 0) {
             e.preventDefault();
-            const { newCursorPos } = handleBackspace(blocks, id);
-            selectBlock(index - 1, newCursorPos);
+            const result = handleBackspace(currentBlocks, currentOrder, id);
+            if (result) {
+                currentBlocks = result.newBlocks;
+                currentOrder = result.newOrder;
+                blockList = currentOrder.map((blockId) => currentBlocks.get(blockId)!);
+            }
         }
 
-        if (e.key === "Delete" && pos === input.value.length && index < blocks.length - 1) {
+        if (e.key === "Delete" && pos === input.value.length && index < currentOrder.length - 1) {
             e.preventDefault();
-            const { newCursorPos } = handleDelete(blocks, id);
-            selectBlock(index, newCursorPos);
+            const result = handleDelete(currentBlocks, currentOrder, id);
+            if (result) {
+                currentBlocks = result.newBlocks;
+                currentOrder = result.newOrder;
+                blockList = currentOrder.map((blockId) => currentBlocks.get(blockId)!);
+            }
         }
 
         if (e.key === "ArrowUp") {
             e.preventDefault();
-            const { newCursorPos } = handleArrowUp(blocks, id, pos);
-            selectBlock(index - 1, newCursorPos);
+            handleArrowUp(blockList, currentOrder, id, pos);
         }
 
         if (e.key === "ArrowDown") {
             e.preventDefault();
-            const { newCursorPos } = handleArrowDown(blocks, id, pos);
-            selectBlock(index + 1, newCursorPos);
+            handleArrowDown(blockList, currentOrder, id, pos);
         }
 
         if (e.key === "ArrowLeft") {
             e.preventDefault();
-            const { newIndex, newCursorPos } = handleArrowLeft(blocks, id, pos, e.ctrlKey);
-            selectBlock(newIndex, newCursorPos);
+            handleArrowLeft(blockList, id, pos, e.ctrlKey);
         }
 
         if (e.key === "ArrowRight") {
             e.preventDefault();
-            const { newIndex, newCursorPos } = handleArrowRight(blocks, id, pos, e.ctrlKey);
-            selectBlock(newIndex, newCursorPos);
+            handleArrowRight(blockList, id, pos, e.ctrlKey);
         }
-    }, [inputsRef, handleEnter, handleBackspace, handleDelete, handleArrowUp, handleArrowDown, handleArrowLeft, handleArrowRight, blocks]);
+    }, [
+        handleEnter,
+        handleBackspace,
+        handleDelete,
+        handleArrowUp,
+        handleArrowDown,
+        handleArrowLeft,
+        handleArrowRight,
+    ]);
 
     const selectLastBlock = useCallback(() => {
-        if (blocks.length === 0) {
+        const currentOrder = orderRef.current;
+        const currentBlocks = blocksRef.current;
+        
+        if (currentOrder.length === 0) {
             const newId = uuidv4();
             const newBlock = { id: newId, text: "" };
-            setBlocks([newBlock]);
+            setBlocks((prev) => {
+                const next = new Map(prev);
+                next.set(newId, newBlock);
+                return next;
+            });
+            setOrder([newId]);
+            setCursor({ blockId: newId, position: 0 });
+            return;
         }
-        const lastIndex = blocks.length - 1;
-        const lastBlock = inputsRef.current[lastIndex];
+
+        const lastIndex = currentOrder.length - 1;
+        const lastId = currentOrder[lastIndex];
+        const lastBlock = currentBlocks.get(lastId);
         if (!lastBlock) return;
-        const length = lastBlock.value.length;
-        lastBlock.focus();
-        lastBlock.setSelectionRange(length, length);
-        setCursor({ blockId: blocks[blocks.length - 1].id, position: length });
-    }, [blocks]);
+
+        const length = lastBlock.text.length;
+        setCursor({ blockId: lastId, position: length });
+    }, []);
 
     const handleEditorClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         if (e.target === e.currentTarget) {
@@ -117,22 +165,45 @@ export default function WhiteboardEditor() {
         }
     };
 
+    const cursorsByBlock = useMemo(() => {
+        const map = new Map<string, RemoteCursorType[]>();
+        remoteCursors.forEach(cursor => {
+            if (!map.has(cursor.blockId)) {
+                map.set(cursor.blockId, []);
+            }
+            map.get(cursor.blockId)!.push(cursor);
+        });
+        return map;
+    }, [remoteCursors]);
+
+    const renderedBlocks = useMemo(() => {
+        return order.map((id) => {
+            const block = blocks.get(id)!;
+            const cursors = cursorsByBlock.get(id) || [];
+
+            return (
+                <Block
+                    key={id}
+                    id={block.id}
+                    value={block.text}
+                    inputRef={(el) => {
+                        if (el) {
+                            inputsRef.current.set(id, el);
+                        } else {
+                            inputsRef.current.delete(id);
+                        }
+                    }}
+                    onChange={(e) => handleChange(e, id)}
+                    onKeyDown={(e) => handleKeyDown(e, id)}
+                    remoteCursors={cursors}
+                />
+            );
+        });
+    }, [blocks, order, handleChange, handleKeyDown, cursorsByBlock]);
+
     useEffect(() => {
         selectLastBlock();
     }, []);
-
-    const renderedBlocks = useMemo(() => {
-        return blocks.map((block, i) => (
-            <Block
-                key={block.id}
-                inputRef={(el) => { inputsRef.current[i] = el }}
-                block={block}
-                onChange={(e) => handleChange(e, blocks, block.id)}
-                onKeyDown={(e, id) => handleKeyDown(e, i, id)}
-                remoteCursors={remoteCursors}
-            />
-        ));
-    }, [blocks, remoteCursors, handleChange, handleKeyDown]);
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-between gap-8 pt-[100px]">
@@ -143,7 +214,9 @@ export default function WhiteboardEditor() {
                 {renderedBlocks}
             </div>
 
-            {debugRef.current && <Debug cursor={cursor} blocks={blocks} />}
+            {debugRef.current && (
+                <Debug cursor={cursor} blocks={blocks} order={order} />
+            )}
         </div>
     );
 }

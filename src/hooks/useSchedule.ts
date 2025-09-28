@@ -1,123 +1,126 @@
-import { useEffect, useState, useRef, type SetStateAction, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import type { BlockType, RemoteCursorType, ScheduleUpdate, UpdateRegister } from "../types";
 
 type RoomUpdatedType = {
-    updatedCursors: RemoteCursorType[] | null,
-    dispatch: UpdateRegister,
-    create_start?: number,
-}
+    updatedCursors: RemoteCursorType[] | null;
+    dispatch: UpdateRegister;
+    create_after?: BlockType;
+};
 
 type RoomDataType = {
-    blocks: BlockType[],
-    cursors: RemoteCursorType[],
-    userId: string,
-}
+    blocks: BlockType[];
+    cursors: RemoteCursorType[];
+    userId: string;
+};
 
-export default function useSchedule(roomId: string, userId: string, setBlocks: React.Dispatch<SetStateAction<BlockType[]>>) {
+export default function useSchedule(
+    roomId: string,
+    userId: string,
+    setBlocks: React.Dispatch<React.SetStateAction<Map<string, BlockType>>>,
+    setOrder: React.Dispatch<React.SetStateAction<string[]>>
+) {
     const [remoteCursors, setRemoteCursors] = useState<RemoteCursorType[]>([]);
     const socketRef = useRef<Socket | null>(null);
     const [connected, setConnected] = useState(false);
 
     const loadData = useCallback(() => {
         if (!socketRef.current) return;
-
         socketRef.current.emit("load");
     }, []);
 
     const handleConnect = () => {
         setConnected(true);
         loadData();
-    }
+    };
 
-    const handleInit = useCallback(({ data }: { data: RoomDataType }) => {
-        const { blocks, cursors } = data;
+    const handleInit = useCallback(
+        ({ data }: { data: RoomDataType }) => {
+            const { blocks, cursors } = data;
 
-        if (blocks) {
-            setBlocks(blocks);
-        }
-
-        if (cursors) {
-            setRemoteCursors(cursors);
-        }
-    }, [setBlocks]);
-
-    const handleChange = useCallback(({ updatedCursors, dispatch, create_start }: RoomUpdatedType) => {
-
-        const { updated, created, deleted } = dispatch;
-
-        setBlocks(prev => {
-            let next = [...prev];
-
-            updated?.forEach(item => {
-                const index = next.findIndex(b => b.id === item.id);
-                if (index === -1) {
-                    next = [...next, item];
-                } else {
-                    next = [
-                        ...next.slice(0, index),
-                        item,
-                        ...next.slice(index + 1),
-                    ];
-                }
-            });
-
-            created?.forEach((item, i) => {
-                if (!create_start) {
-                    create_start = next.findIndex(
-                        b => b.id === updated?.[updated?.length - 1]?.id
-                    );
-                    if (create_start < 0) {
-                        create_start = next.length - 1;
-                    }
-                }
-
-                next = [
-                    ...next.slice(0, create_start + i + 1),
-                    item,
-                    ...next.slice(create_start + i + 1),
-                ];
-            });
-
-            deleted?.forEach(item => {
-                const index = next.findIndex(block => block.id === item.id);
-                if (index >= 0) {
-                    next = [...next.slice(0, index), ...next.slice(index + 1)];
-                }
-            });
-
-            return next;
-        });
-
-        setRemoteCursors((prev) => {
-            const cursors = [...prev];
-
-            if (updatedCursors) {
-                updatedCursors.forEach(cursor => {
-                    const index = cursors.findIndex(c => c.userId === cursor.userId);
-                    if (index >= 0) {
-                        cursors[index] = cursor;
-                    } else {
-                        cursors.push(cursor);
-                    }
-                })
+            if (blocks) {
+                setBlocks(() => {
+                    const map = new Map<string, BlockType>();
+                    blocks.forEach((b) => map.set(b.id, b));
+                    return map;
+                });
+                setOrder(blocks.map((b) => b.id));
             }
 
-            return cursors;
-        })
-    }, [setBlocks, setRemoteCursors]);
+            if (cursors) {
+                setRemoteCursors(cursors);
+            }
+        },
+        [setBlocks, setOrder]
+    );
+
+    const handleChange = useCallback(
+        ({ updatedCursors, dispatch, create_after }: RoomUpdatedType) => {
+            const { updated, created, deleted } = dispatch;
+
+            setBlocks(prev => {
+                const next = new Map(prev);
+
+                updated?.forEach(item => {
+                    next.set(item.id, item);
+                });
+
+                created?.forEach(item => {
+                    if (!next.has(item.id)) {
+                        next.set(item.id, item);
+                    }
+                });
+
+                deleted?.forEach(item => {
+                    next.delete(item.id);
+                });
+
+                return next;
+            });
+
+            setOrder(prev => {
+                let next = [...prev];
+
+                created?.forEach(item => {
+                    if (!next.includes(item.id)) {
+                        const idx = next.indexOf(create_after!.id);
+                        if (idx >= 0) {
+                            next.splice(idx + 1, 0, item.id);
+                        } else {
+                            next.push(item.id);
+                        }
+                    }
+                });
+
+                deleted?.forEach(item => {
+                    next = next.filter(id => id !== item.id);
+                });
+
+                return next;
+            });
+
+
+            setRemoteCursors((prev) => {
+                const cursors = [...prev];
+                if (updatedCursors) {
+                    updatedCursors.forEach((cursor) => {
+                        const index = cursors.findIndex((c) => c.userId === cursor.userId);
+                        if (index >= 0) {
+                            cursors[index] = cursor;
+                        } else {
+                            cursors.push(cursor);
+                        }
+                    });
+                }
+                return cursors;
+            });
+        },
+        [setBlocks, setOrder]
+    );
 
     const handleCursorRemove = (userId: string) => {
-        setRemoteCursors(prev => {
-            const cursors = [...prev];
-            const index = cursors.findIndex(c => c.userId === userId);
-            if (index >= 0) {
-                cursors.splice(index, 1);
-            }
-
-            return cursors;
-        });
-    }
+        setRemoteCursors((prev) => prev.filter((c) => c.userId === userId));
+    };
 
     useEffect(() => {
         const url = import.meta.env.VITE_SOCKET_URL;
@@ -126,11 +129,8 @@ export default function useSchedule(roomId: string, userId: string, setBlocks: R
         socketRef.current = socket;
 
         socket.on("connect", handleConnect);
-
         socket.on("init", handleInit);
-
         socket.on("change", handleChange);
-
         socket.on("cursor:remove", handleCursorRemove);
 
         return () => {
@@ -138,35 +138,22 @@ export default function useSchedule(roomId: string, userId: string, setBlocks: R
         };
     }, []);
 
-
     const schedule: ScheduleUpdate = (action, cursor, target_id, register) => {
         if (!socketRef.current) return;
         if (!connected) return;
 
-        const newCursor = { ...cursor, userId: userId };
+        const newCursor = { ...cursor, userId };
 
-        switch (action) {
-            case "change":
-                socketRef.current.emit("change", { cursor: newCursor, target_id, register });
-                break;
-
-            case "enter":
-                socketRef.current.emit("enter", { cursor: newCursor, target_id, register });
-                break;
-
-            case "backspace":
-                socketRef.current.emit("backspace", { cursor: newCursor, target_id, register });
-                break;
-            
-            case "delete":
-                socketRef.current.emit("delete", { cursor: newCursor, target_id, register })
-                break;
-        }
+        socketRef.current.emit(action, {
+            cursor: newCursor,
+            target_id,
+            register,
+        });
     };
 
     return {
         connected,
         schedule,
-        remoteCursors
+        remoteCursors,
     };
 }
