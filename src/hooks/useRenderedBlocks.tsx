@@ -1,7 +1,6 @@
-import { useMemo, type RefObject } from "react";
+import { useMemo, useCallback, type RefObject } from "react";
 import Block from "../components/Block";
 import type { BlockType, RemoteCursorType } from "../types";
-import ImageBlock from "../components/ImageBlock";
 
 interface Params {
     blocks: Map<string, BlockType>;
@@ -9,9 +8,9 @@ interface Params {
     inputsRef: RefObject<Map<string, HTMLInputElement | null>>;
     handleChange: (e: React.ChangeEvent<HTMLInputElement>, id: string) => void;
     handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>, id: string) => void;
-    handlePaste?: (e: React.ClipboardEvent<HTMLInputElement>, id: string) => void;
+    handlePaste: (e: React.ClipboardEvent<HTMLInputElement>, blocks: Map<string, BlockType>, id: string) => void;
+    handleDeleteImage: (blocks: Map<string, BlockType>, id: string, index: number) => void;
     cursorsByBlock: Map<string, RemoteCursorType[]>;
-    onDeleteBock: (id: string) => void;
 }
 
 export function useRenderedBlocks({
@@ -21,36 +20,49 @@ export function useRenderedBlocks({
     handleChange,
     handleKeyDown,
     handlePaste,
+    handleDeleteImage,
     cursorsByBlock,
-    onDeleteBock,
 }: Params) {
-    return useMemo(() => {
-        return order.map((id) => {
-            const block = blocks.get(id)!;
-            const cursors = cursorsByBlock.get(id) || [];
 
-            if (block.type === "image") {
-                return <ImageBlock key={id} block={block} onDelete={onDeleteBock} />
-            }
+    const createHandlers = useCallback((id: string) => {
+        return {
+            onChange: (e: React.ChangeEvent<HTMLInputElement>) => handleChange(e, id),
+            onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(e, id),
+            onPaste: (e: React.ClipboardEvent<HTMLInputElement>) => handlePaste(e, blocks, id),
+            onDeleteImage: (index: number) => handleDeleteImage(blocks, id, index),
+        };
+    }, [handleChange, handleKeyDown, handlePaste, handleDeleteImage, blocks]);
 
-            return (
-                <Block
-                    key={id}
-                    id={block.id}
-                    value={block.text}
-                    inputRef={(el) => {
-                        if (el) {
-                            inputsRef.current?.set(id, el);
-                        } else {
-                            inputsRef.current?.delete(id);
-                        }
-                    }}
-                    onChange={(e) => handleChange(e, id)}
-                    onKeyDown={(e) => handleKeyDown(e, id)}
-                    onPaste={(e) => handlePaste?.(e, id)}
-                    remoteCursors={cursors}
-                />
-            );
-        });
-    }, [blocks, order, handleChange, handleKeyDown, handlePaste, cursorsByBlock, inputsRef, onDeleteBock]);
+    const createInputRef = useCallback((id: string) => {
+        return (el: HTMLInputElement | null) => {
+            if (el) inputsRef.current?.set(id, el);
+            else inputsRef.current?.delete(id);
+        };
+    }, [inputsRef]);
+
+    const renderedBlocks = order.map((id) => {
+        const block = blocks.get(id);
+        if (!block) return null;
+
+        const cursors = cursorsByBlock.get(id) || [];
+        const handlers = createHandlers(id);
+        const refHandler = createInputRef(id);
+
+        return (
+            <Block
+                key={id}
+                id={block.id}
+                value={block.text}
+                images={block.images}
+                inputRef={refHandler}
+                onChange={handlers.onChange}
+                onKeyDown={handlers.onKeyDown}
+                onPaste={handlers.onPaste}
+                onDeleteImage={(index) => handlers.onDeleteImage(index)}
+                remoteCursors={cursors}
+            />
+        );
+    });
+
+    return renderedBlocks;
 }

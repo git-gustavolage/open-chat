@@ -9,12 +9,11 @@ import { useOnArrowDownAction } from "../actions/arrowDownAction";
 import { useOnArrowLeftAction } from "../actions/arrowLeftAction";
 import { useOnArrowRightAction } from "../actions/arrowRightAction";
 import { useSchedule } from "../hooks/useSchedule";
-import Debug from "./Debug";
 import { useOnSelectLastBlock } from "../actions/selectLastBlock";
 import { useCursorsByBlock } from "../hooks/useCursorByBlocks";
 import { useRenderedBlocks } from "../hooks/useRenderedBlocks";
-import { useDeleteBlock } from "../actions/deleteBlock";
-import { usePasteImageAction } from "../actions/pasteImageAction";
+import { usePasteAction } from "../actions/pasteAction";
+import { useDeleteImage } from "../actions/deleteImage";
 
 interface WhiteboardEditorProps {
     roomId: string;
@@ -29,8 +28,6 @@ export default function WhiteboardEditor({ roomId, username }: WhiteboardEditorP
     const inputsRef = useRef<Map<string, HTMLInputElement | null>>(new Map());
     const blocksRef = useRef(blocks);
     const orderRef = useRef(order);
-
-    const debugRef = useRef(true);
 
     const { schedule: scheduleUpdates, remoteCursors } = useSchedule(
         roomId,
@@ -58,17 +55,17 @@ export default function WhiteboardEditor({ roomId, username }: WhiteboardEditorP
         }
     }, [cursor]);
 
-    const changeAction = useChangeAction(setBlocks, setOrder, setCursor, scheduleUpdates);
-    const handleEnter = useOnEnterAction(setBlocks, setOrder, setCursor, scheduleUpdates);
-    const handleBackspace = useOnBackspaceAction(setBlocks, setOrder, setCursor, scheduleUpdates);
-    const handleDelete = useOnDeleteAction(setBlocks, setOrder, setCursor, scheduleUpdates);
+    const selectLastBlock = useOnSelectLastBlock(setCursor, setBlocks, setOrder);
+    const changeAction = useChangeAction(setBlocks, setCursor, setOrder, scheduleUpdates);
+    const handleEnter = useOnEnterAction(setBlocks, setCursor, setOrder, scheduleUpdates);
+    const handleBackspace = useOnBackspaceAction(setBlocks, setCursor, setOrder, scheduleUpdates);
+    const handleDelete = useOnDeleteAction(setBlocks, setCursor, setOrder, scheduleUpdates);
+    const handlePaste = usePasteAction(setBlocks, scheduleUpdates);
+    const handleDeleteImage = useDeleteImage(setBlocks, scheduleUpdates);
     const handleArrowUp = useOnArrowUpAction(setCursor, scheduleUpdates);
     const handleArrowDown = useOnArrowDownAction(setCursor, scheduleUpdates);
     const handleArrowLeft = useOnArrowLeftAction(setCursor, scheduleUpdates);
     const handleArrowRight = useOnArrowRightAction(setCursor, scheduleUpdates);
-    const selectLastBlock = useOnSelectLastBlock(setCursor, setBlocks, setOrder);
-    const deleteBlock = useDeleteBlock(setBlocks, setOrder, scheduleUpdates);
-    const handlePaste = usePasteImageAction(setBlocks, setOrder, orderRef, scheduleUpdates);
 
     const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, id: string) => {
         changeAction(e, blocksRef.current, orderRef.current, id);
@@ -169,8 +166,8 @@ export default function WhiteboardEditor({ roomId, username }: WhiteboardEditorP
         handleChange,
         handleKeyDown,
         handlePaste,
+        handleDeleteImage,
         cursorsByBlock,
-        onDeleteBock: deleteBlock,
     });
 
     useEffect(() => {
@@ -178,15 +175,13 @@ export default function WhiteboardEditor({ roomId, username }: WhiteboardEditorP
     }, []);
 
     return (
-        <div className="w-full min-h-full flex flex-col items-center justify-between gap-8">
+        <div className="w-full min-h-full h-full flex flex-col items-center justify-between gap-8 pb-32">
             <div
-                className="w-full h-[calc(100%-140px)] bg-bg-light py-4 px-4 overflow-y-auto ring-1 ring-border-color"
+                className="w-full h-full bg-bg-light py-4 px-4 overflow-y-auto ring-1 ring-border-color"
                 onClick={handleEditorClick}
             >
                 {renderedBlocks}
             </div>
-
-            {/* {debugRef.current && <Debug cursor={cursor} blocks={blocks} order={order} />} */}
         </div>
     );
 }

@@ -54,13 +54,13 @@ export function useSchedule(
         if (!dispatch) return;
         const { updated, created, deleted } = dispatch;
 
-        setBlocks((prev) => {
+        setBlocks(prev => {
             const next = new Map(prev);
-            updated?.forEach((item) => next.set(item.id, item));
-            created?.forEach((item) => {
-                if (!next.has(item.id)) next.set(item.id, item);
-            });
-            deleted?.forEach((item) => next.delete(item.id));
+
+            updated?.forEach(item => next.set(item.id, item));
+            created?.forEach(item => next.set(item.id, item));
+            deleted?.forEach(item => next.delete(item.id));
+
             return next;
         });
 

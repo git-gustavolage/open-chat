@@ -3,8 +3,8 @@ import type { BlockType, CursorType, ScheduleUpdate } from "../types";
 
 const useOnDeleteAction = (
     setBlocks: React.Dispatch<SetStateAction<Map<string, BlockType>>>,
-    setOrder: React.Dispatch<SetStateAction<string[]>>,
     setCursor: React.Dispatch<SetStateAction<CursorType>>,
+    setOrder: React.Dispatch<SetStateAction<string[]>>,
     scheduleUpdate: ScheduleUpdate
 ) => {
     return useCallback((blocks: Map<string, BlockType>, order: string[], id: string) => {
@@ -19,7 +19,8 @@ const useOnDeleteAction = (
 
         const mergedBlock: BlockType = {
             ...currentBlock,
-            text: currentBlock.text + (nextBlock.type == "text" ? nextBlock.text : ""),
+            text: currentBlock.text + nextBlock.text,
+            images: [...currentBlock.images, ...nextBlock.images],
         };
 
         const newBlocks = new Map(blocks);
@@ -37,7 +38,7 @@ const useOnDeleteAction = (
             position: newCursorPos,
         };
 
-        scheduleUpdate("delete", newCursor, mergedBlock.id, {
+        scheduleUpdate("block:change", newCursor, mergedBlock.id, {
             updated: [mergedBlock],
             deleted: [nextBlock],
         });

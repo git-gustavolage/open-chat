@@ -13,9 +13,11 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="w-full relative">
-            <div className="w-full h-[45px] border-b border-border-color sticky top-0 bg-bg-dark/50 z-50 backdrop-blur-xs"></div>
-            <WhiteboardEditor roomId={roomId} username={username} />
+        <div className="w-full h-full relative">
+            <div className="w-full h-[45px] border-b border-border-color sticky top-0 bg-bg-light/50 z-50 backdrop-blur-xs"></div>
+            <div className="max-h-[clac(100%-45px)]">
+                <WhiteboardEditor roomId={roomId} username={username} />
+            </div>
         </div>
     )
 }

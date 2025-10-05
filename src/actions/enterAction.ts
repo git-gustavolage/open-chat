@@ -4,16 +4,16 @@ import { v4 as uuidv4 } from "uuid";
 
 const useOnEnterAction = (
     setBlocks: React.Dispatch<SetStateAction<Map<string, BlockType>>>,
-    setOrder: React.Dispatch<SetStateAction<string[]>>,
     setCursor: React.Dispatch<SetStateAction<CursorType>>,
+    setOrder: React.Dispatch<SetStateAction<string[]>>,
     scheduleUpdate: ScheduleUpdate
 ) => {
     return useCallback((blocks: Map<string, BlockType>, order: string[], id: string, pos: number) => {
         const index = order.findIndex((blockId) => blockId === id);
-        if (index === -1) return null;
+        if (index === -1) return;
 
         const currentBlock = blocks.get(id);
-        if (!currentBlock) return null;
+        if (!currentBlock) return;
 
         const beforeText = currentBlock.text.slice(0, pos);
         const afterText = currentBlock.text.slice(pos);
@@ -26,7 +26,7 @@ const useOnEnterAction = (
         const newBlock: BlockType = {
             id: uuidv4(),
             text: afterText,
-            type: "text",
+            images: [],
         };
 
         const newBlocks = new Map(blocks);
@@ -44,7 +44,7 @@ const useOnEnterAction = (
             position: 0,
         };
 
-        scheduleUpdate("enter", newCursor, updatedBlock.id, {
+        scheduleUpdate("block:change", newCursor, updatedBlock.id, {
             updated: [updatedBlock],
             created: [newBlock],
         });

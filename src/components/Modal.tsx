@@ -27,7 +27,7 @@ const Modal = ({ className, open = true, onClose, children }: ModalProps) => {
                 onClick={onClose}
             >
                 <div
-                    className={twMerge("min-w-[600px] max-md:min-w-[95%] bg-white border border-neutral-300 rounded-xl p-4 animate-scale-in", className)}
+                    className={twMerge("min-w-[600px] max-md:min-w-[95%] bg-bg-light border border-border-color rounded-xl p-4 animate-scale-in", className)}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="inset-0 w-full h-full">

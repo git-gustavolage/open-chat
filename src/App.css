@@ -17,7 +17,17 @@
     --animate-fade-in: fade-in 0.6s ease-out forwards;
     --animate-scale-in: scale-in 0.4s ease-out forwards;
 
-    --color-bg-dark: #efefef;
+    --color-primary: var(--color-pink-700);
+    --color-primary-mutted: var(--color-pink-800);
+    
+    /* dark (?) */
+    /* --color-bg-dark: var(--color-gray-950);
+    --color-bg-light: var(--color-neutral-900);
+    --color-border-color: var(--color-neutral-800);
+    --color-text-title: var(--color-neutral-50);
+    --color-text-muted: var(--color-neutral-400); */
+
+    --color-bg-dark: var(--color-neutral-100);
     --color-bg-light: var(--color-neutral-50);
     --color-border-color: var(--color-neutral-300);
     --color-text-title: var(--color-neutral-900);

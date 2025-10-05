@@ -33,7 +33,7 @@ export default function CommunityTemplate() {
                 </div>
             </div>
 
-            <div className="w-full max-h-screen overflow-y-scroll bg-bg-light">
+            <div className="w-full max-h-screen overflow-y-auto bg-bg-light">
                 <Outlet />
             </div>
         </div>

@@ -1,7 +1,7 @@
 export interface BlockType {
     id: string;
     text: string;
-    type: "text" | "image";
+    images: string[];
 }
 
 export type CursorType = {
@@ -18,7 +18,7 @@ export type RemoteCursorType = {
     color: string;
 };
 
-export type Actions = "create:image" | "change" | "enter" | "backspace" | "delete" | "arrowChange";
+export type Actions = "block:change" | "arrowChange";
 
 export type UpdateRegister = {
     created?: BlockType[] | null,
@@ -26,4 +26,4 @@ export type UpdateRegister = {
     deleted?: BlockType[] | null,
 }
 
-export type ScheduleUpdate = (action: Actions, cursor: CursorType, target_id?: BlockType["id"], register?: UpdateRegister | null) => void
+export type ScheduleUpdate = (action: Actions, cursor: CursorType | null, target_id?: BlockType["id"], register?: UpdateRegister | null) => void

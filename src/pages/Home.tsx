@@ -35,10 +35,10 @@ export default function Home() {
 
             <Modal open={open} onClose={() => setOpen(false)}>
                 <Modal.Header>
-                    <span className="inline-flex gap-2 items-center text-neutral-800 text-xl font-semibold"><StarIcon /> Quem é você?</span>
+                    <span className="inline-flex gap-2 items-center text-xl font-semibold"><StarIcon /> Quem é você?</span>
                 </Modal.Header>
                 <div className="w-full h-full pt-4 flex flex-col gap-4">
-                    <p className="text-lg text-zinc-800">Identifique-se para poder acessar a comunidade:</p>
+                    <p className="text-lg">Identifique-se para poder acessar a comunidade:</p>
                     <div className="w-full h-full flex flex-col justify-between gap-4">
                         <input
                             id="username"
@@ -48,19 +48,19 @@ export default function Home() {
                             spellCheck="false"
                             type="text"
                             placeholder="username"
-                            className="w-full py-1.5 px-3 border border-neutral-300 rounded-sm"
+                            className="w-full py-1.5 px-3 border border-border-color rounded-sm"
                             onChange={(e) => setUsername(e.target.value)}
                         />
                         <div className="w-full flex flex-row gap-4 items-center justify-end">
                             <button
-                                className="min-w-[130px] py-1.5 px-8 border border-neutral-300 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 rounded-sm cursor-pointer duration-200 ease-in-out"
+                                className="min-w-[130px] py-1.5 px-8 border border-border-color text-text-muted hover:text-text-title hover:bg-bg-dark rounded-sm cursor-pointer duration-200 ease-in-out"
                                 onClick={() => setOpen(false)}
                             >
                                 Cancelar
                             </button>
                             <button
                                 disabled={!username}
-                                className="min-w-[130px] py-1.5 px-8 bg-pink-700 hover:bg-pink-800 border border-pink-700 text-white font-semibold rounded-sm cursor-pointer duration-200 ease-in-out disabled:opacity-60 disabled:pointer-events-none"
+                                className="min-w-[130px] py-1.5 px-8 bg-primary hover:bg-primary-mutted border border-primary text-text-title font-semibold rounded-sm cursor-pointer duration-200 ease-in-out disabled:opacity-60 disabled:pointer-events-none"
                                 onClick={handleJoin}
                             >
                                 Entrar
@@ -70,13 +70,24 @@ export default function Home() {
                 </div>
             </Modal>
 
-            <h3 className="text-2xl font-bold text-neutral-800 mb-4">Comunidades: </h3>
-            <div className="w-full grid grid-cols-1 gap-8">
-                <CommunityCard
-                    name="IFRO (KGB)"
-                    roomId="room1"
-                    onClick={handleClick}
-                />
+            <h3 className="text-2xl font-bold text-text-title mb-4">Comunidades: </h3>
+
+            <div className="grid grid-cols-4 gap-4">
+                <div className="w-full grid grid-cols-1 gap-8">
+                    <CommunityCard
+                        name="IFRO (KGB)"
+                        roomId="room1"
+                        onClick={handleClick}
+                    />
+                </div>
+
+                <div className="w-full grid grid-cols-1 gap-8">
+                    <CommunityCard
+                        name="Dev"
+                        roomId="dev"
+                        onClick={handleClick}
+                    />
+                </div>
             </div>
         </div>
     )

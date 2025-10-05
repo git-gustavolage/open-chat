@@ -3,8 +3,8 @@ import type { BlockType, CursorType, ScheduleUpdate } from "../types";
 
 const useOnBackspaceAction = (
     setBlocks: React.Dispatch<SetStateAction<Map<string, BlockType>>>,
-    setOrder: React.Dispatch<SetStateAction<string[]>>,
     setCursor: React.Dispatch<SetStateAction<CursorType>>,
+    setOrder: React.Dispatch<SetStateAction<string[]>>,
     scheduleUpdate: ScheduleUpdate
 ) => {
     return useCallback((blocks: Map<string, BlockType>, order: string[], id: string) => {
@@ -13,15 +13,14 @@ const useOnBackspaceAction = (
 
         const currentBlock = blocks.get(id);
         const prevBlock = blocks.get(order[index - 1]);
-        const isImage = prevBlock?.type == "image";
         if (!currentBlock || !prevBlock) return null;
 
-        const newCursorPos = isImage ? 0 : prevBlock.text.length;
+        const newCursorPos = prevBlock.text.length;
 
         const mergedBlock: BlockType = {
             ...prevBlock,
-            text: (isImage ? "" : prevBlock.text) + currentBlock.text,
-            type: "text",
+            text: prevBlock.text + currentBlock.text,
+            images: [...(prevBlock.images ?? []), ...(currentBlock.images ?? [])],
         };
 
         const newBlocks = new Map(blocks);
@@ -31,7 +30,7 @@ const useOnBackspaceAction = (
         const newOrder = [...order];
         newOrder.splice(index, 1);
 
-        setBlocks(newBlocks);
+        setBlocks(new Map(newBlocks));
         setOrder(newOrder);
 
         const newCursor: CursorType = {
@@ -39,7 +38,7 @@ const useOnBackspaceAction = (
             position: newCursorPos,
         };
 
-        scheduleUpdate("backspace", newCursor, currentBlock.id, {
+        scheduleUpdate("block:change", newCursor, currentBlock.id, {
             deleted: [currentBlock],
             updated: [mergedBlock],
         });

@@ -29,8 +29,8 @@ export default function Community() {
                             <div className="inline-flex items-center gap-4">
                                 <button className="py-1.5 px-8 min-w-[130px] bg-pink-700 border border-pink-700 text-neutral-50 font-semibold rounded-sm">Entrar</button>
                                 <button className="inline-flex gap-1 items-center rounded-sm border border-border-color bg-bg-dark text-text-title">
-                                    <span className="p-2 border-r border-border-color"><StarIcon size={18} /></span>
-                                    <span className="py-1.5 px-2">Estrelar</span>
+                                    <span className="p-2 border-r border-border-color"><StarIcon size={20} /></span>
+                                    <span className="py-1.5 px-3">Estrelar</span>
                                 </button>
                             </div>
                         </div>

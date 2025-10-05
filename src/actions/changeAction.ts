@@ -24,8 +24,8 @@ const computeBlockStyle = (element: HTMLInputElement) => {
 
 const useChangeAction = (
     setBlocks: React.Dispatch<SetStateAction<Map<string, BlockType>>>,
-    setOrder: React.Dispatch<SetStateAction<string[]>>,
     setCursor: React.Dispatch<SetStateAction<CursorType>>,
+    setOrder: React.Dispatch<SetStateAction<string[]>>,
     scheduleUpdates: ScheduleUpdate
 ) => {
     return useCallback((e: React.ChangeEvent<HTMLInputElement>, blocks: Map<string, BlockType>, order: string[], id: string) => {
@@ -79,8 +79,8 @@ const useChangeAction = (
             }
 
             if (overflow) {
-                updatedBlock = { ...updatedBlock, text: line };
-                newBlock = { id: uuidv4(), text: overflow, type: "text" };
+                updatedBlock = { ...updatedBlock, text: line, images: [] };
+                newBlock = { id: uuidv4(), text: overflow, images: updatedBlock.images };
 
                 setBlocks((prev) => {
                     const next = new Map(prev);
@@ -117,7 +117,7 @@ const useChangeAction = (
             position: newCursorPos,
         };
 
-        scheduleUpdates("change", newCursor, updatedBlock.id, {
+        scheduleUpdates("block:change", newCursor, updatedBlock.id, {
             created: newBlock ? [newBlock] : null,
             updated: [updatedBlock],
         });
