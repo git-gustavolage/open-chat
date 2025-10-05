@@ -1,6 +1,6 @@
-import { memo, useEffect, useRef, useState, type ClipboardEvent } from "react";
+import { memo, useEffect, useRef, type ClipboardEvent } from "react";
 import { RemoteCursor } from "./RemoteCursor";
-import type { RemoteCursorType } from "./types";
+import type { RemoteCursorType } from "../types";
 
 interface BlocksProps {
     id: string;
@@ -14,7 +14,6 @@ interface BlocksProps {
 
 function BlockComponent({ id, value, onChange, onKeyDown, onPaste, inputRef, remoteCursors }: BlocksProps) {
     const localRef = useRef<HTMLInputElement | null>(null);
-    const [images, setImages] = useState<string[]>([]);
 
     useEffect(() => {
         const el = localRef.current;
@@ -45,16 +44,6 @@ function BlockComponent({ id, value, onChange, onKeyDown, onPaste, inputRef, rem
                 className="block w-full outline-none"
                 spellCheck="false"
             />
-            <div className="mt-2 flex flex-wrap gap-2">
-                {images.map((src, idx) => (
-                    <img
-                        key={idx}
-                        src={src}
-                        alt={`colada-${idx}`}
-                        className="max-w-[200px] max-h-[200px] border rounded"
-                    />
-                ))}
-            </div>
             {renderedCursors}
         </div>
     );

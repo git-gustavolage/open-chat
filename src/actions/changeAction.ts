@@ -80,7 +80,7 @@ const useChangeAction = (
 
             if (overflow) {
                 updatedBlock = { ...updatedBlock, text: line };
-                newBlock = { id: uuidv4(), text: overflow };
+                newBlock = { id: uuidv4(), text: overflow, type: "text" };
 
                 setBlocks((prev) => {
                     const next = new Map(prev);

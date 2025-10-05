@@ -13,7 +13,7 @@ export const useOnSelectLastBlock = (
 
         if (currentOrder.length === 0) {
             const newId = uuidv4();
-            const newBlock: BlockType = { id: newId, text: "" };
+            const newBlock: BlockType = { id: newId, text: "", type: "text" };
             setBlocks((prev) => {
                 const next = new Map(prev);
                 next.set(newId, newBlock);

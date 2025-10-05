@@ -6,7 +6,7 @@ export const Toolbar: React.FC = () => {
     const location = useLocation();
 
     return (
-        <div className="w-[800px] max-lg:w-[600px] max-md:w-[95%] fixed top-4 left-1/2 transform -translate-x-1/2 bg-white px-6 py-3 flex space-x-4 z-40 ring-1 ring-neutral-300">
+        <div className="w-[60%] max-lg:w-[600px] max-md:w-[95%] fixed top-4 left-1/2 transform -tranneutral-x-1/2 bg-white px-6 py-3 flex space-x-4 z-40 ring-1 ring-neutral-300">
 
             <ToolbarButton
                 toRoute="/"
@@ -18,7 +18,7 @@ export const Toolbar: React.FC = () => {
             </ToolbarButton>
 
             <ToolbarButton
-                toRoute="/"
+                toRoute="#"
                 active={location.pathname.includes("/chat")}
             >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -34,7 +34,7 @@ interface ToolbarButtonProps extends PropsWithChildren {
     active: boolean;
 }
 
-function ToolbarButton({ toRoute, active, children }: ToolbarButtonProps) {
+export function ToolbarButton({ toRoute, active, children }: ToolbarButtonProps) {
 
     const navigate = useNavigate();
 

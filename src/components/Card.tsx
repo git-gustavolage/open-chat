@@ -1,4 +1,4 @@
-import Users from "./icons/Users";
+import UsersIcon from "./icons/UsersIcon";
 
 interface CommunityCardProps {
     roomId: string;
@@ -17,7 +17,7 @@ export default function CommunityCard({ roomId, name, onClick }: CommunityCardPr
                 <span className="text-pink-600">#{roomId}</span>
 
                 <div className="inline-flex gap-1 items-center py-1 text-sm text-neutral-600">
-                    <Users size={18} /> 0 Membros
+                    <UsersIcon size={18} /> 0 Membros
                 </div>
             </div>
         </div>

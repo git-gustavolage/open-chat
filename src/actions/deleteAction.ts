@@ -19,7 +19,7 @@ const useOnDeleteAction = (
 
         const mergedBlock: BlockType = {
             ...currentBlock,
-            text: currentBlock.text + nextBlock.text,
+            text: currentBlock.text + (nextBlock.type == "text" ? nextBlock.text : ""),
         };
 
         const newBlocks = new Map(blocks);

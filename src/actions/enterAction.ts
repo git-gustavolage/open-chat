@@ -26,6 +26,7 @@ const useOnEnterAction = (
         const newBlock: BlockType = {
             id: uuidv4(),
             text: afterText,
+            type: "text",
         };
 
         const newBlocks = new Map(blocks);

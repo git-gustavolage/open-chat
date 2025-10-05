@@ -1,18 +1,20 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import type { BlockType, CursorType } from "./types";
-import { useChangeAction } from "./actions/changeAction";
-import { useOnEnterAction } from "./actions/enterAction";
-import { useOnBackspaceAction } from "./actions/backspaceAction";
-import { useOnDeleteAction } from "./actions/deleteAction";
-import { useOnArrowUpAction } from "./actions/arrowUpAction";
-import { useOnArrowDownAction } from "./actions/arrowDownAction";
-import { useOnArrowLeftAction } from "./actions/arrowLeftAction";
-import { useOnArrowRightAction } from "./actions/arrowRightAction";
-import { useSchedule } from "./hooks/useSchedule";
-import Debug from "./components/Debug";
-import { useOnSelectLastBlock } from "./actions/selectLastBlock";
-import { useCursorsByBlock } from "./hooks/useCursorByBlocks";
-import { useRenderedBlocks } from "./hooks/useRenderedBlocks";
+import type { BlockType, CursorType } from "../types";
+import { useChangeAction } from "../actions/changeAction";
+import { useOnEnterAction } from "../actions/enterAction";
+import { useOnBackspaceAction } from "../actions/backspaceAction";
+import { useOnDeleteAction } from "../actions/deleteAction";
+import { useOnArrowUpAction } from "../actions/arrowUpAction";
+import { useOnArrowDownAction } from "../actions/arrowDownAction";
+import { useOnArrowLeftAction } from "../actions/arrowLeftAction";
+import { useOnArrowRightAction } from "../actions/arrowRightAction";
+import { useSchedule } from "../hooks/useSchedule";
+import Debug from "./Debug";
+import { useOnSelectLastBlock } from "../actions/selectLastBlock";
+import { useCursorsByBlock } from "../hooks/useCursorByBlocks";
+import { useRenderedBlocks } from "../hooks/useRenderedBlocks";
+import { useDeleteBlock } from "../actions/deleteBlock";
+import { usePasteImageAction } from "../actions/pasteImageAction";
 
 interface WhiteboardEditorProps {
     roomId: string;
@@ -28,7 +30,7 @@ export default function WhiteboardEditor({ roomId, username }: WhiteboardEditorP
     const blocksRef = useRef(blocks);
     const orderRef = useRef(order);
 
-    const debugRef = useRef(false);
+    const debugRef = useRef(true);
 
     const { schedule: scheduleUpdates, remoteCursors } = useSchedule(
         roomId,
@@ -65,6 +67,8 @@ export default function WhiteboardEditor({ roomId, username }: WhiteboardEditorP
     const handleArrowLeft = useOnArrowLeftAction(setCursor, scheduleUpdates);
     const handleArrowRight = useOnArrowRightAction(setCursor, scheduleUpdates);
     const selectLastBlock = useOnSelectLastBlock(setCursor, setBlocks, setOrder);
+    const deleteBlock = useDeleteBlock(setBlocks, setOrder, scheduleUpdates);
+    const handlePaste = usePasteImageAction(setBlocks, setOrder, orderRef, scheduleUpdates);
 
     const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, id: string) => {
         changeAction(e, blocksRef.current, orderRef.current, id);
@@ -164,7 +168,9 @@ export default function WhiteboardEditor({ roomId, username }: WhiteboardEditorP
         inputsRef,
         handleChange,
         handleKeyDown,
+        handlePaste,
         cursorsByBlock,
+        onDeleteBock: deleteBlock,
     });
 
     useEffect(() => {
@@ -172,15 +178,15 @@ export default function WhiteboardEditor({ roomId, username }: WhiteboardEditorP
     }, []);
 
     return (
-        <div className="w-full h-full flex flex-col items-center justify-between gap-8 pt-[100px]">
+        <div className="w-full min-h-full flex flex-col items-center justify-between gap-8">
             <div
-                className="w-[800px] max-lg:w-[600px] max-md:w-[95%] h-[calc(100%-140px)] bg-white py-8 px-12 overflow-y-auto ring-1 ring-neutral-300"
+                className="w-full h-[calc(100%-140px)] bg-bg-light py-4 px-4 overflow-y-auto ring-1 ring-border-color"
                 onClick={handleEditorClick}
             >
                 {renderedBlocks}
             </div>
 
-            {debugRef.current && <Debug cursor={cursor} blocks={blocks} order={order} />}
+            {/* {debugRef.current && <Debug cursor={cursor} blocks={blocks} order={order} />} */}
         </div>
     );
 }

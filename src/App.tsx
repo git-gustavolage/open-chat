@@ -1,21 +1,44 @@
 import './App.css'
-import Index from './pages/Index'
-import { BrowserRouter, Route, Routes } from 'react-router'
+import { createBrowserRouter, RouterProvider } from 'react-router'
 import ChatPage from './pages/ChatPage'
+import CommunityTemplate from './templates/CommunityTemplate'
+import Root from './pages/Root'
+import Home from './pages/Home'
+import Community from './pages/Community'
+import NotFound from './pages/NotFound'
 
 function App() {
 
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      Component: Root,
+      ErrorBoundary: NotFound,
+      children: [
+        { index: true, Component: Home },
+        {
+          path: "/room/:roomId",
+          Component: CommunityTemplate,
+          children: [
+            { index: true, Component: Community },
+            {
+              path: "/room/:roomId/text",
+              Component: ChatPage
+            }
+          ]
+        },
+      ]
+    }
+  ]);
+
   return (
-    <BrowserRouter>
-      <main className='min-h-screen h-screen font-roboto bg-neutral-100'>
+    <main className='min-h-screen h-full w-full font-inter bg-bg-light text-text-title'>
 
-        <Routes>
-          <Route path='/' element={<Index />} />
-          <Route path='/chat/:roomId/:username' element={<ChatPage />} />
-        </Routes>
+      <div className='w-full h-full max-h-screen flex flex-row'>
+        <RouterProvider router={router} />
+      </div>
 
-      </main>
-    </BrowserRouter>
+    </main>
   )
 }
 

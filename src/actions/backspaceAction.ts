@@ -13,13 +13,15 @@ const useOnBackspaceAction = (
 
         const currentBlock = blocks.get(id);
         const prevBlock = blocks.get(order[index - 1]);
+        const isImage = prevBlock?.type == "image";
         if (!currentBlock || !prevBlock) return null;
 
-        const newCursorPos = prevBlock.text.length;
+        const newCursorPos = isImage ? 0 : prevBlock.text.length;
 
         const mergedBlock: BlockType = {
             ...prevBlock,
-            text: prevBlock.text + currentBlock.text,
+            text: (isImage ? "" : prevBlock.text) + currentBlock.text,
+            type: "text",
         };
 
         const newBlocks = new Map(blocks);

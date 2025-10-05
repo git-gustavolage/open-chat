@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { RemoteCursorType } from "./types";
+import type { RemoteCursorType } from "../types";
 
 type Props = {
     cursor: RemoteCursorType;

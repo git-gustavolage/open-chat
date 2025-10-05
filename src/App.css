@@ -1,16 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,200..800;1,200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=REM:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
     --font-roboto: "Roboto", sans-serif;
+    --font-karla: "Karla", sans-serif;
+    --font-inter: "Inter", sans-serif;
+    --font-rem: "Rem", sans-serif;
 
     --animate-twinkle: twinkle 3s ease-in-out infinite;
     --animate-float: float 32s ease-in-out infinite;
 
-    /* NOVAS ANIMAÇÕES */
     --animate-fade-in-up: fade-in-up 0.6s ease-out forwards;
     --animate-fade-in: fade-in 0.6s ease-out forwards;
     --animate-scale-in: scale-in 0.4s ease-out forwards;
+
+    --color-bg-dark: #efefef;
+    --color-bg-light: var(--color-neutral-50);
+    --color-border-color: var(--color-neutral-300);
+    --color-text-title: var(--color-neutral-900);
+    --color-text-muted: var(--color-neutral-500);
 
     @keyframes twinkle {
 
@@ -30,17 +41,16 @@
 
         0%,
         100% {
-            transform: translateY(0px) rotate(0deg);
+            transform: tranneutralY(0px) rotate(0deg);
             opacity: 0.6;
         }
 
         50% {
-            transform: translateY(-20px) rotate(180deg);
+            transform: tranneutralY(-20px) rotate(180deg);
             opacity: 1;
         }
     }
 
-    /* fade-in simples */
     @keyframes fade-in {
         0% {
             opacity: 0;
@@ -51,20 +61,18 @@
         }
     }
 
-    /* fade-in com subida */
     @keyframes fade-in-up {
         0% {
             opacity: 0;
-            transform: translateY(10px);
+            transform: tranneutralY(10px);
         }
 
         100% {
             opacity: 1;
-            transform: translateY(0);
+            transform: tranneutralY(0);
         }
     }
 
-    /* aparecendo com escala */
     @keyframes scale-in {
         0% {
             opacity: 0;

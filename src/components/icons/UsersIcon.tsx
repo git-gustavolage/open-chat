@@ -1,4 +1,4 @@
-export default function Users({ size = 24 }: { size?: number }) {
+export default function UsersIcon({ size = 24 }: { size?: number }) {
 
     return (
         <svg
